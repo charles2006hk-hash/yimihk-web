@@ -82,14 +82,30 @@ export default function Home() {
     setIsSubmitted(false);
   };
 
-  // 處理表單提交 (未來可接 Firebase 或 Email API)
-  const handleSubmit = (e: React.FormEvent) => {
+  // 在 src/app/page.tsx 裡面修改這個函數
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    // 這裡未來可以加上 fetch('/api/contact', {...}) 發送資料
-    setTimeout(() => {
-      setContactContext(null); // 3秒後自動關閉表單
-    }, 3000);
+    
+    // 獲取表單數據
+    const formData = new FormData(e.currentTarget);
+    formData.append('來源板塊', contactContext || '未定'); // 把他們點擊的業務標題加上去
+
+    // 發送到 Formspree
+    try {
+      await fetch('https://formspree.io/f/meepbnpb', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setContactContext(null);
+      }, 3000);
+    } catch (error) {
+      alert('發送失敗，請稍後再試。');
+    }
   };
 
   return (
