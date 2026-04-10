@@ -1,88 +1,113 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Save, RefreshCw, BarChart, FileText, Settings } from 'lucide-react';
+import { Lock, Cpu, Mail, Settings, LogOut, FileText, Activity } from 'lucide-react';
+import Link from 'next/link';
 
-export default function AdminDashboard() {
-  const [prompt, setPrompt] = useState("你是一位蟻米集團的資深分析師。請結合今日的中港股市指數與 AI 產業趨勢，生成三則 150 字內的集團動態資訊。語氣需專業、具國際視野。");
-  const [isSaving, setIsSaving] = useState(false);
+export default function AdminPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSaveConfig = async () => {
-    setIsSaving(true);
-    // 這裡未來對接到 Firebase 的 config 集合
-    setTimeout(() => {
-      setIsSaving(false);
-      alert('配置已成功同步到 Firebase！');
-    }, 1000);
+  // 登入驗證 (你可以自行修改 'yimi2026' 為你想要的密碼)
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === 'yimi2026') {
+      setIsLoggedIn(true);
+      setError('');
+    } else {
+      setError('密碼錯誤，請重新輸入或聯繫系統管理員。');
+    }
   };
 
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-blue-900/30 rounded-full flex items-center justify-center text-blue-500">
+              <Lock size={32} />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-white text-center mb-2">內部系統登入</h2>
+          <p className="text-slate-400 text-center text-sm mb-8">蟻米集團 (國際) AI 管理後台</p>
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="請輸入系統密碼"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-center tracking-widest"
+              />
+              {error && <p className="text-red-400 text-xs mt-2 text-center">{error}</p>}
+            </div>
+            <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors">
+              進入系統
+            </button>
+            <div className="text-center">
+              <Link href="/" className="text-slate-500 text-sm hover:text-white transition-colors">返回官網首頁</Link>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // 登入成功後的管理介面
   return (
-    <div className="min-h-screen bg-slate-100 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white p-6">
-        <div className="text-xl font-bold mb-10 text-blue-400">YIMI ADMIN</div>
-        <nav className="space-y-4">
-          <div className="flex items-center gap-3 p-3 bg-blue-600 rounded-lg cursor-pointer">
-            <Settings size={20} /> 系統設定
-          </div>
-          <div className="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800 rounded-lg cursor-pointer">
-            <FileText size={20} /> 新聞管理
-          </div>
-          <div className="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800 rounded-lg cursor-pointer">
-            <BarChart size={20} /> 指數監控
-          </div>
-        </nav>
-      </aside>
+    <div className="min-h-screen bg-slate-950 text-slate-200">
+      <nav className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <div className="font-bold text-xl text-white flex items-center gap-2">
+          <Cpu className="text-blue-500" /> YIMI Admin
+        </div>
+        <button onClick={() => setIsLoggedIn(false)} className="flex items-center text-slate-400 hover:text-white text-sm">
+          <LogOut size={16} className="mr-1" /> 登出系統
+        </button>
+      </nav>
 
-      {/* Main Content */}
-      <main className="flex-1 p-10">
-        <header className="flex justify-between items-center mb-10">
-          <h1 className="text-2xl font-bold text-slate-800">AI 策略管理中心</h1>
-          <button 
-            onClick={handleSaveConfig}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all"
-          >
-            {isSaving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
-            儲存所有更改
-          </button>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Prompt Setup */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <FileText className="text-blue-600" size={20} /> AI 新聞生成 Prompt
-            </h2>
-            <p className="text-sm text-slate-500 mb-4">這段 Prompt 將決定每天自動生成新聞的方向與語氣。</p>
-            <textarea 
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="w-full h-64 p-4 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-slate-700 leading-relaxed"
-            />
-          </div>
-
-          {/* Market Index Management */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <BarChart className="text-blue-600" size={20} /> 即時指數顯示設定
-            </h2>
-            <div className="space-y-4">
-              {['恆生指數', '上證指數', '標普 500', '納斯達克'].map((index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-                  <span className="font-medium text-slate-700">{index}</span>
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs text-green-600 font-bold">自動抓取中</span>
-                    <input type="checkbox" defaultChecked className="w-5 h-5 accent-blue-600" />
-                  </div>
-                </div>
-              ))}
+      <div className="max-w-6xl mx-auto p-6 py-12">
+        <h1 className="text-3xl font-bold text-white mb-8">控制中心 Dashboard</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* 功能卡片 1：觸發 AI 生成 */}
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-blue-500 transition-all">
+            <div className="w-12 h-12 bg-blue-900/30 text-blue-500 rounded-xl flex items-center justify-center mb-4">
+              <Activity size={24} />
             </div>
-            <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-700">
-              提示：指數數據每 15 分鐘透過金融 API 代理自動更新，國內訪問將透過伺服器緩存分發。
+            <h3 className="text-xl font-bold text-white mb-2">AI 新聞引擎</h3>
+            <p className="text-slate-400 text-sm mb-6">手動觸發 AI 模型，根據今日大盤與國際動態生成最新智庫報告。</p>
+            <button className="w-full py-3 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 rounded-lg font-semibold transition-all">
+              一鍵生成今日報告
+            </button>
+          </div>
+
+          {/* 功能卡片 2：客戶名單 */}
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+            <div className="w-12 h-12 bg-emerald-900/30 text-emerald-500 rounded-xl flex items-center justify-center mb-4">
+              <Mail size={24} />
             </div>
+            <h3 className="text-xl font-bold text-white mb-2">業務諮詢名單</h3>
+            <p className="text-slate-400 text-sm mb-6">查看來自首頁「聯繫業務負責人」表單的潛在客戶名單與需求。</p>
+            <button className="w-full py-3 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-lg font-semibold transition-all">
+              查看 3 條未讀訊息
+            </button>
+          </div>
+
+          {/* 功能卡片 3：網站設定 */}
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+            <div className="w-12 h-12 bg-purple-900/30 text-purple-500 rounded-xl flex items-center justify-center mb-4">
+              <Settings size={24} />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">系統與參數設定</h3>
+            <p className="text-slate-400 text-sm mb-6">設定 AI 引擎的 Prompt 提示詞、管理員密碼以及接收通知的 Email。</p>
+            <button className="w-full py-3 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-lg font-semibold transition-all">
+              進入設定
+            </button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
