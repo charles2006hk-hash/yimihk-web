@@ -120,16 +120,23 @@ export default function Home() {
 
         <div className="relative z-10 max-w-5xl mx-auto text-center mt-10 md:mt-0 backdrop-blur-sm bg-slate-950/20 p-8 md:p-12 rounded-3xl border border-white/5 shadow-2xl">
           
-          {/* 公司 LOGO 區塊 */}
-          <div className="flex justify-center mb-6">
+         {/* 公司 LOGO 區塊 - 透過 CSS 代碼直接優化大小與顏色 */}
+          <div className="flex justify-center mb-8 relative">
+            {/* Logo 背後的微光暈，增加層次感 */}
+            <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full w-32 h-32 mx-auto -z-10"></div>
+            
             <img 
               src="/logo.png" 
               alt="YIMI Group Logo" 
-              className="h-20 md:h-28 w-auto object-contain drop-shadow-2xl" 
-              onError={(e) => e.currentTarget.style.display = 'none'} // 如果還沒上傳 LOGO 就先隱藏避免破圖
+              // 核心修改在這裡：
+              // 1. 大小縮減：h-14 md:h-20 讓 Logo 變精緻，不再喧賓奪主
+              // 2. 顏色魔法：使用 grayscale 和 brightness-[300%] 將原本的橙色強行轉為高質感的「銀白色」
+              // 3. 質感提升：加入 drop-shadow 讓它有發光的感覺
+              className="h-14 md:h-20 w-auto object-contain grayscale brightness-[300%] contrast-125 opacity-90 hover:opacity-100 transition-all drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" 
+              onError={(e) => e.currentTarget.style.display = 'none'} 
             />
           </div>
-
+          
           <div className="inline-flex items-center px-4 py-1.5 mb-6 text-xs font-semibold tracking-widest text-blue-400 uppercase bg-blue-900/30 border border-blue-500/30 rounded-full backdrop-blur-sm">
             <Globe className="w-4 h-4 mr-2" /> Global Hub for AI & Capital
           </div>
