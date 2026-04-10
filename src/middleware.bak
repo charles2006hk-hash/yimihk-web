@@ -1,0 +1,24 @@
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone()
+  
+  // 只有訪問 /admin 路徑時才觸發檢查
+  if (url.pathname.startsWith('/admin')) {
+    // 簡單的 Demo 邏輯：檢查 Cookie 中是否有管理員標記
+    // 未來我們會對接到更完善的登入流程
+    const isAdmin = request.cookies.get('admin_token')
+
+    if (!isAdmin && url.pathname !== '/admin/login') {
+      url.pathname = '/admin/login'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: '/admin/:path*',
+}
