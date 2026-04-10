@@ -207,7 +207,7 @@ export default function Home() {
 
               <div className="md:w-7/12 p-6 md:p-12 flex flex-col justify-center bg-slate-900">
                 <div className="flex items-center gap-3 mb-4 opacity-80">
-                   {React.cloneElement(activeData.icon as React.ReactElement, { size: 24, className: "text-blue-500 m-0" })}
+                   {React.cloneElement(activeData.icon as React.ReactElement<any>, { size: 24, className: "text-blue-500 m-0" })}
                    <h4 className="text-base md:text-lg font-semibold text-slate-300">{activeData.title}</h4>
                 </div>
                 
