@@ -82,16 +82,15 @@ export default function Home() {
     setIsSubmitted(false);
   };
 
-  // 在 src/app/page.tsx 裡面修改這個函數
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // 獲取表單數據
     const formData = new FormData(e.currentTarget);
-    formData.append('來源板塊', contactContext || '未定'); // 把他們點擊的業務標題加上去
+    formData.append('來源板塊', contactContext || '未定');
 
-    // 發送到 Formspree
     try {
+      // 這裡換成了你的專屬 Formspree API 端點
       await fetch('https://formspree.io/f/meepbnpb', {
         method: 'POST',
         body: formData,
@@ -278,29 +277,33 @@ export default function Home() {
                     您正在諮詢：<span className="text-blue-400 font-medium ml-2 px-2 py-1 bg-blue-900/30 rounded-md">{contactContext}</span>
                   </p>
 
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                 <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">您想了解的具體方向或面臨的挑戰？</label>
+                    {/* 務必確認有 name="諮詢需求" */}
+                    <textarea 
+                      name="諮詢需求" 
+                      required
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all h-28 resize-none placeholder:text-slate-600"
+                      placeholder="例如：我們公司想引入 AI 優化產線，或者需要大宗貿易的資金通道..."
+                    ></textarea>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">您想了解的具體方向或面臨的挑戰？</label>
-                      <textarea 
-                        required
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all h-28 resize-none placeholder:text-slate-600"
-                        placeholder="例如：我們公司想引入 AI 優化產線，或者需要大宗貿易的資金通道..."
-                      ></textarea>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">您的姓名 / 稱呼</label>
+                      {/* 務必確認有 name="客戶姓名" */}
+                      <input type="text" name="客戶姓名" required className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" placeholder="王先生" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">您的姓名 / 稱呼</label>
-                        <input type="text" required className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" placeholder="王先生" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">聯絡方式 (Email 或 電話)</label>
-                        <input type="text" required className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" placeholder="your@email.com" />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">聯絡方式 (Email 或 電話)</label>
+                      {/* 務必確認有 name="聯絡方式" */}
+                      <input type="text" name="聯絡方式" required className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" placeholder="your@email.com" />
                     </div>
-                    <button type="submit" className="w-full py-4 mt-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-                      <Send size={18} /> 發送諮詢請求
-                    </button>
-                  </form>
+                  </div>
+                  <button type="submit" className="w-full py-4 mt-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                    <Send size={18} /> 發送諮詢請求
+                  </button>
+                </form>
                 </>
               )}
             </div>
