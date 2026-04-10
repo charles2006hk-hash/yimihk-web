@@ -4,22 +4,20 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   ArrowRight, Globe, Cpu, Blocks, Building2, BarChart3, 
-  Shield, Target, Zap, ShieldCheck, Users, BarChart, X 
+  Shield, Target, Zap, ShieldCheck, Users, BarChart, X, Send, CheckCircle2 
 } from 'lucide-react';
 import NewsWidget from '@/components/NewsWidget';
 import MarketTicker from '@/components/MarketTicker';
 
-// 內部按鈕內容配置 (AI 智庫深研內容)
 const btn1DeepResearch = `由集團 AI 引擎即時分析全球政策導向、金融波動及行業深度動態。我們的 AI 模型不僅分析 Market Ticker 等每日開盤數據，更能針對國際政治、大宗商品期貨、智慧地產園區管理等特定領域，生成具有國際投行水準的深度研究報告與決策建議，為跨境資本開拓新的增長極。`;
 
-// 四大板塊的深度內容數據庫 (結合最新政策與世界動態)
 const servicesData = [
   {
     id: 'ai',
     icon: <Cpu className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
     title: 'AI 領域與創意工業',
     shortDesc: '針對 AI 趨勢發展多媒體平台創意工業，利用生成式技術重塑內容生產力與商業轉化率。',
-    deepImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1000&auto=format&fit=crop',
+    deepImage: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop',
     deepTitle: 'AI 雙引擎：驅動工業升級與營銷革命',
     deepPoints: [
       { icon: <BarChart size={18}/>, title: '企業級 AI 生產優化', desc: '深入企業核心工業流程，利用 AI 模型進行大數據過濾、預測性維護與供應鏈優化，大幅提升產能效率。' },
@@ -45,7 +43,7 @@ const servicesData = [
     icon: <Globe className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
     title: '跨境資本與貿易',
     shortDesc: '南北向資金多通道管理，專注大宗貿易買賣與專業項目資產管理，鏈接全球流動性。',
-    deepImage: 'https://images.unsplash.com/photo-1590283603385-18ff38540843?q=80&w=1000&auto=format&fit=crop',
+    deepImage: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop', // 已更新為穩定圖源
     deepTitle: '發揮「超級聯繫人」戰略優勢',
     deepPoints: [
       { icon: <Globe size={18}/>, title: '大額資金與資產管理', desc: '深度配合國家與地區金融政策，為大型企業提供安全、合規的南北向資金調撥與跨境資產配置方案。' },
@@ -58,7 +56,7 @@ const servicesData = [
     icon: <Building2 className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
     title: '地產開發及營運',
     shortDesc: '高端地產項目開發，結合智慧城市與科技園區管理，輸出國際級的產城融合營運服務。',
-    deepImage: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000&auto=format&fit=crop',
+    deepImage: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1000&auto=format&fit=crop',
     deepTitle: '賦能全球菁英的頂級人居生態',
     deepPoints: [
       { icon: <Users size={18}/>, title: '對接優才/高才引進', desc: '緊跟內外人才流動趨勢，開發符合國際標準的優質地產項目，助力國內外頂尖人才無縫融入本地與世界各地。' },
@@ -69,22 +67,39 @@ const servicesData = [
 ];
 
 export default function Home() {
-  // 狀態管理：控制哪個模態視窗處於打開狀態
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  // 新增狀態：控制「聯繫表單」的顯示與情境
+  const [contactContext, setContactContext] = useState<string | null>(null);
+  // 新增狀態：表單提交成功
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   const activeData = servicesData.find(s => s.id === activeModal);
+
+  // 處理開啟聯繫表單
+  const handleOpenContact = (title: string) => {
+    setActiveModal(null); // 關閉介紹彈窗
+    setContactContext(title); // 設定表單的情境標題
+    setIsSubmitted(false);
+  };
+
+  // 處理表單提交 (未來可接 Firebase 或 Email API)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitted(true);
+    // 這裡未來可以加上 fetch('/api/contact', {...}) 發送資料
+    setTimeout(() => {
+      setContactContext(null); // 3秒後自動關閉表單
+    }, 3000);
+  };
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 relative selection:bg-blue-600 selection:text-white font-sans">
       
-      {/* 1. 頂部即時指數欄 */}
       <MarketTicker />
 
-      {/* 2. Hero Section 首屏視覺 */}
+      {/* Hero Section */}
       <section className="relative flex flex-col items-center justify-center min-h-[calc(100vh-40px)] px-6 py-20 overflow-hidden">
-        {/* 靜態背景圖層 (需確保 public/background.png 存在) */}
         <div className="absolute inset-0 z-0 opacity-20 bg-[url('/background.png')] bg-cover bg-center" />
-        
-        {/* 背景光暈效果 */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-900/30 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-indigo-900/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
 
@@ -113,12 +128,10 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        
-        {/* 底部的漸變遮罩 */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent z-10"></div>
       </section>
 
-      {/* 3. 實力背書區塊 */}
+      {/* 實力背書區塊 */}
       <section className="relative z-20 border-y border-slate-800 bg-slate-900/80 backdrop-blur-md py-16 px-6">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className="lg:w-1/2 text-center lg:text-left">
@@ -144,7 +157,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. 國際業務板塊 (帶交互彈窗) */}
+      {/* 國際業務板塊 */}
       <section id="ecosystem" className="py-24 max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight text-white">集團國際業務佈局</h2>
@@ -153,7 +166,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* 卡片網格 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {servicesData.map((service) => (
             <div 
@@ -173,30 +185,17 @@ export default function Home() {
           ))}
         </div>
 
-        {/* 彈出視窗 (Modal) */}
+        {/* 業務詳情彈窗 (Modal) */}
         {activeModal && activeData && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-            {/* 背景遮罩 */}
-            <div 
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
-              onClick={() => setActiveModal(null)}
-            ></div>
-            
-            {/* 內容區塊 */}
+            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" onClick={() => setActiveModal(null)}></div>
             <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto md:overflow-y-visible">
-              
-              <button 
-                onClick={() => setActiveModal(null)}
-                className="absolute top-4 right-4 p-2 bg-slate-800/80 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-colors z-20"
-              >
+              <button onClick={() => setActiveModal(null)} className="absolute top-4 right-4 p-2 bg-slate-800/80 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-colors z-20">
                 <X size={24} />
               </button>
 
               <div className="md:w-5/12 relative h-48 md:h-auto overflow-hidden shrink-0">
-                <div 
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${activeData.deepImage})` }}
-                ></div>
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${activeData.deepImage})` }}></div>
                 <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-6 md:p-8">
                   <div className="inline-block px-4 py-2 bg-blue-600/20 border border-blue-500/30 backdrop-blur-md rounded-lg mb-2 md:mb-4">
@@ -210,29 +209,25 @@ export default function Home() {
                    {React.cloneElement(activeData.icon as React.ReactElement<any>, { size: 24, className: "text-blue-500 m-0" })}
                    <h4 className="text-base md:text-lg font-semibold text-slate-300">{activeData.title}</h4>
                 </div>
-                
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 md:mb-8 leading-tight">
-                  {activeData.deepTitle}
-                </h3>
-
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 md:mb-8 leading-tight">{activeData.deepTitle}</h3>
                 <div className="space-y-6 md:space-y-8">
                   {activeData.deepPoints.map((point, idx) => (
                     <div key={idx} className="flex gap-3 md:gap-4 items-start">
-                      <div className="p-2 md:p-3 bg-slate-800 rounded-xl text-blue-400 shrink-0">
-                        {point.icon}
-                      </div>
+                      <div className="p-2 md:p-3 bg-slate-800 rounded-xl text-blue-400 shrink-0">{point.icon}</div>
                       <div>
                         <h5 className="text-lg md:text-xl font-bold text-white mb-1 md:mb-2">{point.title}</h5>
-                        <p className="text-slate-400 leading-relaxed text-sm md:text-base">
-                          {point.desc}
-                        </p>
+                        <p className="text-slate-400 leading-relaxed text-sm md:text-base">{point.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-slate-800">
-                  <button className="flex items-center text-blue-400 hover:text-blue-300 font-semibold group transition-colors text-sm md:text-base">
+                  {/* 改動：點擊這裡會觸發新的表單彈窗 */}
+                  <button 
+                    onClick={() => handleOpenContact(activeData.title)}
+                    className="flex items-center text-blue-400 hover:text-blue-300 font-semibold group transition-colors text-sm md:text-base w-full p-4 bg-blue-900/20 rounded-xl justify-center border border-blue-500/20 hover:bg-blue-900/40"
+                  >
                     聯繫業務負責人進一步探討 
                     <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
                   </button>
@@ -241,9 +236,63 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* 新增：聯絡表單彈窗 (Context-Aware Form) */}
+        {contactContext && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity" onClick={() => setContactContext(null)}></div>
+            <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-8 shadow-2xl z-10 animate-in fade-in slide-in-from-bottom-10 duration-300">
+              
+              <button onClick={() => setContactContext(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+                <X size={24} />
+              </button>
+
+              {isSubmitted ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle2 size={32} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">已收到您的需求</h3>
+                  <p className="text-slate-400">我們的負責人將於 24 小時內與您聯繫。</p>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-2xl font-bold text-white mb-2">專屬業務對接</h3>
+                  <p className="text-slate-400 text-sm mb-6 flex items-center">
+                    您正在諮詢：<span className="text-blue-400 font-medium ml-2 px-2 py-1 bg-blue-900/30 rounded-md">{contactContext}</span>
+                  </p>
+
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">您想了解的具體方向或面臨的挑戰？</label>
+                      <textarea 
+                        required
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all h-28 resize-none placeholder:text-slate-600"
+                        placeholder="例如：我們公司想引入 AI 優化產線，或者需要大宗貿易的資金通道..."
+                      ></textarea>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">您的姓名 / 稱呼</label>
+                        <input type="text" required className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" placeholder="王先生" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">聯絡方式 (Email 或 電話)</label>
+                        <input type="text" required className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" placeholder="your@email.com" />
+                      </div>
+                    </div>
+                    <button type="submit" className="w-full py-4 mt-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                      <Send size={18} /> 發送諮詢請求
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
-      {/* 5. AI News Section */}
+      {/* AI News Section */}
       <section id="ai-news" className="py-24 bg-slate-950 border-t border-slate-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 gap-6">
@@ -256,14 +305,12 @@ export default function Home() {
               </p>
             </div>
           </div>
-          {/* AI 新聞組件 */}
           <div className="bg-slate-900/50 rounded-3xl border border-slate-800 p-2 md:p-6 shadow-2xl">
             <NewsWidget />
           </div>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-slate-950 py-12 border-t border-slate-900">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-slate-500 text-sm text-center md:text-left">
