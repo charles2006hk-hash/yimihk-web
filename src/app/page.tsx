@@ -112,21 +112,33 @@ export default function Home() {
       
       <MarketTicker />
 
-      {/* Hero Section */}
+      {/* 2. Hero Section 首屏視覺 */}
       <section className="relative flex flex-col items-center justify-center min-h-[calc(100vh-40px)] px-6 py-20 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-20 bg-[url('/background.png')] bg-cover bg-center" />
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-900/30 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-indigo-900/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
 
-        <div className="relative z-10 max-w-5xl mx-auto text-center mt-10 md:mt-0 backdrop-blur-sm bg-slate-950/20 p-8 rounded-3xl border border-white/5 shadow-2xl">
-          <div className="inline-flex items-center px-4 py-1.5 mb-8 text-xs font-semibold tracking-widest text-blue-400 uppercase bg-blue-900/30 border border-blue-500/30 rounded-full backdrop-blur-sm">
+        <div className="relative z-10 max-w-5xl mx-auto text-center mt-10 md:mt-0 backdrop-blur-sm bg-slate-950/20 p-8 md:p-12 rounded-3xl border border-white/5 shadow-2xl">
+          
+          {/* 公司 LOGO 區塊 */}
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/logo.png" 
+              alt="YIMI Group Logo" 
+              className="h-20 md:h-28 w-auto object-contain drop-shadow-2xl" 
+              onError={(e) => e.currentTarget.style.display = 'none'} // 如果還沒上傳 LOGO 就先隱藏避免破圖
+            />
+          </div>
+
+          <div className="inline-flex items-center px-4 py-1.5 mb-6 text-xs font-semibold tracking-widest text-blue-400 uppercase bg-blue-900/30 border border-blue-500/30 rounded-full backdrop-blur-sm">
             <Globe className="w-4 h-4 mr-2" /> Global Hub for AI & Capital
           </div>
           
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
-            蟻米集團（國際）有限公司
-            <span className="block text-xl md:text-3xl text-slate-400 mt-4 font-light tracking-widest uppercase">
-              YIMI International Holdings
+          {/* 衝擊力字體設計 */}
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-slate-400 drop-shadow-lg">
+            蟻米集團
+            <span className="block text-xl md:text-3xl text-blue-400 mt-4 font-light tracking-widest uppercase">
+              YIMI Group
             </span>
           </h1>
           
@@ -330,10 +342,12 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="bg-slate-950 py-12 border-t border-slate-900">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-slate-500 text-sm text-center md:text-left">
-            © 2026 蟻米集團（國際）有限公司 YIMI International Holdings Limited. All Rights Reserved.
+            {/* 自動獲取當前年份 */}
+            © 2018-{new Date().getFullYear()} 蟻米集團（國際）有限公司 YIMI Group. All Rights Reserved.
           </div>
           <div className="flex items-center justify-center gap-6 text-sm text-slate-500">
             <span className="hover:text-blue-400 cursor-pointer transition-colors">隱私政策</span>
