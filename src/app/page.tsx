@@ -1,8 +1,70 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Globe, Cpu, Blocks, Building2, BarChart3, Shield, TrendingUp } from 'lucide-react';
+import { ArrowRight, Globe, Cpu, Blocks, Building2, BarChart3, Shield, Zap, Target } from 'lucide-react';
 import NewsWidget from '@/components/NewsWidget';
 import MarketTicker from '@/components/MarketTicker';
+
+// 全球金融網絡動態背景 SVG 組件
+function FinancialNetworkMap() {
+  return (
+    <svg 
+      className="absolute inset-0 opacity-10 mix-blend-overlay -z-20 w-full h-full" 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 1000 600"
+      preserveAspectRatio="xMidYMid slice"
+    >
+      {/* 1. 地圖背景層 */}
+      <path d="M100 100 C 150 150, 200 100, 250 150" fill="none" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.2" className="text-slate-700"/>
+      <rect width="100%" height="100%" fill="none" stroke="none" />
+      <g className="text-slate-700" fill="currentColor" fillOpacity="0.1">
+        <path d="M720,130 A200,100 0 0,1 920,230 L920,430 A200,100 0 0,1 720,530 L520,530 A200,100 0 0,1 320,430 L320,230 A200,100 0 0,1 520,130 Z" />
+        <circle cx="200" cy="150" r="80" /> <circle cx="150" cy="350" r="100" /> <circle cx="300" cy="500" r="90" />
+      </g>
+      
+      {/* 2. 動態網絡連線層 - 象徵光束流動 */}
+      <g className="network-lines" stroke="currentColor" strokeWidth="1" strokeOpacity="0.5">
+        <line x1="140" y1="200" x2="710" y2="445" className="text-blue-500 line-pulse-blue"/> 
+        <line x1="850" y1="200" x2="710" y2="445" className="text-blue-500 line-pulse-blue"/> 
+        <line x1="100" y1="400" x2="710" y2="445" className="text-blue-500 line-pulse-blue"/> 
+        <line x1="400" y1="580" x2="710" y2="445" className="text-blue-500 line-pulse-blue"/> 
+        <line x1="710" y1="445" x2="710" y2="445" className="text-blue-500"/>
+      </g>
+
+      {/* 3. 金色核心熱點 - 大灣區/香港脈衝 */}
+      <g className="gba-hub">
+        <circle cx="710" cy="445" r="8" className="text-yellow-400 fill-current animate-pulse"/>
+        <circle cx="710" cy="445" r="2" className="text-yellow-400 fill-current"/>
+        <text x="710" y="475" textAnchor="middle" className="text-yellow-400 font-bold text-xs">GBA HUB - ACTIVE</text>
+      </g>
+
+      {/* 4. 全球藍色熱點同步闪烁 */}
+      <g className="global-hotspots text-blue-500">
+        <g transform="translate(140, 200)"> {/* 歐洲倫敦 */}
+          <circle r="4" className="fill-current animate-pulse"/> <circle r="1" className="fill-current"/> 
+          <text y="20" textAnchor="middle" className="font-medium text-[10px]">EUROPE</text>
+        </g>
+        <g transform="translate(100, 400)"> {/* 非洲約翰尼斯堡 */}
+          <circle r="4" className="fill-current animate-pulse-delayed"/> <circle r="1" className="fill-current"/> 
+          <text y="20" textAnchor="middle" className="font-medium text-[10px]">AFRICA</text>
+        </g>
+        <g transform="translate(850, 200)"> {/* 澳洲雪梨 */}
+          <circle r="4" className="fill-current animate-pulse"/> <circle r="1" className="fill-current"/> 
+          <text y="20" textAnchor="middle" className="font-medium text-[10px]">AUSTRALIA</text>
+        </g>
+      </g>
+      
+      {/* 5. 數據粒子動態效果 */}
+      <circle cx="140" cy="200" r="1.5" className="text-yellow-400 fill-current particle-move-1"/>
+      <circle cx="850" cy="200" r="1.5" className="text-yellow-400 fill-current particle-move-2"/>
+      
+    </svg>
+  );
+}
+
+// 內部按鈕內容配置 (深研內容 Deep Research)
+const btn1DeepResearch = `由集團 AI 引擎即時分析全球政策導向、金融波動及行業深度動態。我們的 AI 模型不僅分析 Market Ticker 等每日開盤數據，更能針對國際政治、大宗商品期貨、智慧地產園區管理等特定領域，生成具有國際投行水準的深度研究報告與決策建議，為跨境資本開拓新的增長極。`;
+
+const btn2DeepResearch = `香港平台專注於以技術驅動的核心板塊，通過 AI 賦能創意工業與多媒體平台重塑內容生產力；以 Web3 區塊鏈技術重構實體與虛擬消費場景；提供南北向資金多通道管理與大宗貿易溯源服務；並結合智慧城市與科技園區管理，輸出國際級的產城融合營運，為全球企業提供數字化轉型的終極解方。`;
 
 export default function Home() {
   return (
@@ -13,10 +75,8 @@ export default function Home() {
 
       {/* 2. Hero Section 首屏視覺 */}
       <section className="relative flex flex-col items-center justify-center min-h-[calc(100vh-40px)] px-6 py-20 overflow-hidden">
-        {/* 深色科技感背景光暈 */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-900/20 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-indigo-900/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay -z-20" />
+        {/* 動態全球網絡背景圖層 (代碼中包含) */}
+        <FinancialNetworkMap />
 
         <div className="relative z-10 max-w-5xl mx-auto text-center mt-10 md:mt-0">
           <div className="inline-flex items-center px-4 py-1.5 mb-8 text-xs font-semibold tracking-widest text-blue-400 uppercase bg-blue-900/30 border border-blue-500/30 rounded-full backdrop-blur-sm">
@@ -36,7 +96,7 @@ export default function Home() {
           
           <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4 w-full sm:w-auto px-4 sm:px-0">
             <Link href="#ai-news" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.3)] group">
-              探索 AI 財經智庫 <TrendingUp size={18} className="group-hover:translate-x-1 transition-transform" />
+              探索 AI 財經智庫 <Target size={18} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link href="#ecosystem" className="w-full sm:w-auto bg-slate-800/80 hover:bg-slate-700 text-white border border-slate-700 px-8 py-4 rounded-full font-semibold transition-all flex items-center justify-center gap-2 backdrop-blur-sm group">
               了解集團生態 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -52,7 +112,7 @@ export default function Home() {
             <h3 className="text-sm text-blue-400 font-bold uppercase tracking-widest mb-2">中國強大後盾 Backed By</h3>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">廣州蟻米控股</h2>
             <p className="text-slate-400 text-base leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              全國獨創<span className="text-slate-200 font-medium">「教+創+孵+投」</span>四位一體閉環生態。作為粵港澳大灣區數字化與區塊鏈產業的領軍者，我們成功投資孵化多家上市科技企業，為國際業務提供堅實的資本與技術護城河。
+              全國獨創<span className="text-slate-200 font-medium">「教+創+孵+投」</span>四位一體閉環生態。作為粵港澳大灣區數字化與區塊鏈產業的領軍者，我們成功投資孵化多家上市科技企業，旗下基金管理規模達17億元人民幣。
             </p>
           </div>
           <div className="lg:w-1/2 grid grid-cols-2 gap-4 w-full">
@@ -71,11 +131,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. 國際業務板塊 (繼承原有設定) */}
+      {/* 4. 國際業務板塊 */}
       <section id="ecosystem" className="py-24 max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">國際業務佈局</h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">整合總部數字化技術與投資網絡，推動虛實結合的全新經濟體系。</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">集團國際業務佈局</h2>
+          <p className="text-slate-400 max-w-3xl mx-auto leading-relaxed">
+            {btn2DeepResearch}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
@@ -110,8 +172,8 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bold flex items-center gap-3 text-white tracking-tight">
                 <BarChart3 className="text-blue-500" /> AI 實時智庫與動態
               </h2>
-              <p className="mt-3 text-slate-400 font-light max-w-2xl text-lg">
-                由集團 AI 引擎即時分析全球政策導向、金融波動及行業深度動態，為決策提供精準洞察。
+              <p className="mt-4 text-slate-300 font-light max-w-3xl text-lg leading-relaxed">
+                {btn1DeepResearch}
               </p>
             </div>
           </div>
