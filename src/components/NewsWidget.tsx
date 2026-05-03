@@ -72,14 +72,18 @@ export default function NewsWidget() {
         ))}
       </div>
 
+      {/* 閱讀全文彈窗 (Modal) */}
       {selectedArticle && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setSelectedArticle(null)}></div>
-          <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-3xl p-8 md:p-10 shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-200">
-            <button onClick={() => setSelectedArticle(null)} className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-300">
+          
+          {/* 🌟 修改這一行：加上 max-h-[90vh] 和 overflow-y-auto，並自訂了滾動條樣式 */}
+          <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-3xl p-8 md:p-10 shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+            
+            <button onClick={() => setSelectedArticle(null)} className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-300 transition-colors">
               <X size={24} />
             </button>
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-6 flex items-center gap-3 mt-2">
                <span className="text-sm font-semibold text-blue-400 bg-blue-900/30 px-3 py-1 rounded-full">{selectedArticle.category}</span>
                <span className="text-sm text-slate-500">{selectedArticle.date}</span>
             </div>
