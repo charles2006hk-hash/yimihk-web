@@ -555,7 +555,10 @@ export default function AdminPage() {
       {showNewsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowNewsModal(false)}></div>
-          <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 md:p-8 animate-in zoom-in-95 duration-200">
+          
+          {/* 🌟 修改這一行：加上 max-h-[90vh] 和 overflow-y-auto */}
+          <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 md:p-8 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+            
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-white">{editingNews.id === 0 ? '發佈新文章' : '編輯文章'}</h2>
               <button onClick={() => setShowNewsModal(false)} className="text-slate-400 hover:text-white transition-colors"><X size={24}/></button>
@@ -586,8 +589,9 @@ export default function AdminPage() {
                 <textarea value={editingNews.summary} onChange={(e) => setEditingNews({...editingNews, summary: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500 h-20 resize-none" />
               </div>
               <div>
+                {/* 🌟 順便把這裡的 textarea 高度加高 (h-64)，讓編輯長文更舒服 */}
                 <label className="block text-sm text-slate-400 mb-1">深度內容全文 (支持分段)</label>
-                <textarea value={editingNews.fullText} onChange={(e) => setEditingNews({...editingNews, fullText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500 h-40 resize-none" />
+                <textarea value={editingNews.fullText} onChange={(e) => setEditingNews({...editingNews, fullText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500 h-64 resize-none" />
               </div>
               <div className="flex items-center mt-2">
                 <input type="checkbox" id="publish-status" checked={editingNews.published} onChange={(e) => setEditingNews({...editingNews, published: e.target.checked})} className="w-4 h-4 accent-blue-500 cursor-pointer" />
