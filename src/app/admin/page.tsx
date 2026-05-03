@@ -15,6 +15,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('capital');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false); // 新增：控制 AI 生成時的 Loading 狀態
 
   // ================= 2. 資金監控系統狀態 =================
   const [capitalConfig, setCapitalConfig] = useState({
@@ -73,19 +74,45 @@ export default function AdminPage() {
     else { setError('密碼錯誤，請重新輸入。'); }
   };
 
-  // --- 智庫 CRUD 邏輯 ---
-  const handleGenerateNews = () => {
-    const newArticle = {
-      id: Date.now(),
-      title: `AI 實時預測：${new Date().toLocaleDateString()} 亞洲跨境資本流向異動分析`,
-      category: '實時研報',
-      date: new Date().toISOString().split('T')[0],
-      summary: 'AI 引擎自動捕捉市場異動生成的初步摘要。',
-      fullText: '此為草稿，請在此處填寫詳細內容...',
-      published: false
-    };
-    syncNewsData([newArticle, ...newsArticles]);
-    alert('✅ AI 引擎已成功抓取最新數據並生成草稿報告！');
+  // --- 智庫 CRUD 邏輯 (真實串接 AI) ---
+  const handleGenerateNews = async () => {
+    setIsGeneratingAI(true);
+    try {
+      const systemPrompt = "你現在是蟻米集團的首席 AI 分析師。請結合今日全球宏觀經濟與大灣區動態，為高端客戶生成一篇關於「跨境資本流動」或「AI 產業趨勢」的深度洞察報告。語氣需要權威、數據驅動且符合國際投行標準。";
+
+      const response = await fetch('/api/generateNews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: systemPrompt })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "生成失敗");
+      }
+
+      const aiResult = JSON.parse(data.result);
+
+      const newArticle = {
+        id: Date.now(),
+        title: aiResult.title || 'AI 生成標題失敗',
+        category: aiResult.category || '實時研報',
+        date: new Date().toISOString().split('T')[0],
+        summary: aiResult.summary || '摘要生成失敗',
+        fullText: aiResult.fullText || '內文生成失敗',
+        published: false
+      };
+
+      syncNewsData([newArticle, ...newsArticles]);
+      alert('✅ 真實 AI 深度分析完成！已為您生成研報草稿。');
+
+    } catch (error: any) {
+      console.error(error);
+      alert(`❌ AI 生成失敗，請確認 API Key 是否設定正確。錯誤訊息: ${error.message}`);
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const openAddNews = () => {
@@ -314,8 +341,16 @@ export default function AdminPage() {
                   <p className="text-slate-400">管理將顯示在官網首頁的新聞、研報與洞察。</p>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={handleGenerateNews} className="px-4 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg text-sm font-bold transition-all flex items-center shadow-lg hover:shadow-purple-900/20">
-                    <Cpu size={16} className="mr-2"/> AI 一鍵生成研報
+                  <button 
+                    onClick={handleGenerateNews} 
+                    disabled={isGeneratingAI}
+                    className="px-4 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg text-sm font-bold transition-all flex items-center shadow-lg hover:shadow-purple-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingAI ? (
+                      <><div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin mr-2"></div> 分析中...</>
+                    ) : (
+                      <><Cpu size={16} className="mr-2"/> AI 一鍵生成研報</>
+                    )}
                   </button>
                   <button onClick={openAddNews} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all flex items-center shadow-lg shadow-blue-500/20">
                     <Plus size={16} className="mr-1"/> 手動發佈文章
