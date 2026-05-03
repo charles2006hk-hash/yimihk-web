@@ -25,8 +25,8 @@ export async function POST(req: Request) {
       }
     `;
 
-    // 呼叫 Google Gemini API (使用 gemini-1.5-flash 模型，速度最快且免費額度高)
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // 🌟 核心修改在這裡：將 URL 裡面的模型名稱更新為 2026 年最穩定的 gemini-2.5-flash
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
