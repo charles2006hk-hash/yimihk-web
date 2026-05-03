@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Lock, Cpu, Mail, Settings, LogOut, Activity, 
   PieChart, TrendingUp, DollarSign, Briefcase, Calendar, 
@@ -42,12 +42,29 @@ export default function AdminPage() {
   const targetROI = ((annualInterestCost + (upfrontFeeCost / capitalConfig.durationYears)) / capitalConfig.principal) * 100;
   const currentAvgROI = totalAllocated === 0 ? 0 : projects.reduce((sum, p) => sum + (Number(p.roi) * (Number(p.allocated)/totalAllocated)), 0);
 
-  // ================= 3. AI 智庫狀態 =================
+  // ================= 3. AI 智庫狀態 (新增同步邏輯) =================
   const [newsArticles, setNewsArticles] = useState([
-    { id: 1, title: '香港「超級聯繫人」政策升級：大灣區資本跨境流動新指南', category: '政策解讀', date: '2026-04-10', published: true },
-    { id: 2, title: 'AIGC 工業應用報告：生成式 AI 如何降低 40% 營銷成本', category: '行業洞察', date: '2026-04-09', published: true },
-    { id: 3, title: '全球大宗商品價格波動與區塊鏈溯源的避險價值', category: '市場預警', date: '2026-04-08', published: true }
+    { id: 1, title: '香港「超級聯繫人」政策升級：大灣區資本跨境流動新指南', category: '政策解讀', date: '2026-04-10', summary: '最新政策放寬了大灣區企業在港融資的限制，預計將釋放超 500 億資金流動性。', fullText: '根據集團 AI 智庫即時分析...', published: true },
+    { id: 2, title: 'AIGC 工業應用報告：生成式 AI 如何降低 40% 營銷成本', category: '行業洞察', date: '2026-04-09', summary: '多媒體廣告矩陣全面引入 AI 輔助，重塑數字創意產業鏈。', fullText: '結合本週全球科技股財報數據...', published: true },
+    { id: 3, title: '全球大宗商品價格波動與區塊鏈溯源的避險價值', category: '市場預警', date: '2026-04-08', summary: '受地緣政治影響，大宗貿易波動加劇，Web3 溯源系統成為信任基石。', fullText: '全球 AI 預測引擎昨晚發出預警...', published: true }
   ]);
+
+  const [showNewsModal, setShowNewsModal] = useState(false);
+  const [editingNews, setEditingNews] = useState({ id: 0, title: '', category: '行業洞察', date: '', summary: '', fullText: '', published: true });
+
+  // 初始化：讀取本地緩存的智庫數據
+  useEffect(() => {
+    const savedNews = localStorage.getItem('yimi_news_data');
+    if (savedNews) {
+      setNewsArticles(JSON.parse(savedNews));
+    }
+  }, []);
+
+  // 保存數據並同步到本地緩存 (讓前台可以讀取)
+  const syncNewsData = (updatedNews: any) => {
+    setNewsArticles(updatedNews);
+    localStorage.setItem('yimi_news_data', JSON.stringify(updatedNews));
+  };
 
   // ================= 4. 操作邏輯函數 =================
   const handleLogin = (e: React.FormEvent) => {
@@ -56,18 +73,47 @@ export default function AdminPage() {
     else { setError('密碼錯誤，請重新輸入。'); }
   };
 
+  // --- 智庫 CRUD 邏輯 ---
   const handleGenerateNews = () => {
     const newArticle = {
       id: Date.now(),
       title: `AI 實時預測：${new Date().toLocaleDateString()} 亞洲跨境資本流向異動分析`,
       category: '實時研報',
       date: new Date().toISOString().split('T')[0],
+      summary: 'AI 引擎自動捕捉市場異動生成的初步摘要。',
+      fullText: '此為草稿，請在此處填寫詳細內容...',
       published: false
     };
-    setNewsArticles([newArticle, ...newsArticles]);
+    syncNewsData([newArticle, ...newsArticles]);
     alert('✅ AI 引擎已成功抓取最新數據並生成草稿報告！');
   };
 
+  const openAddNews = () => {
+    setEditingNews({ id: 0, title: '', category: '行業洞察', date: new Date().toISOString().split('T')[0], summary: '', fullText: '', published: true });
+    setShowNewsModal(true);
+  };
+
+  const openEditNews = (news: any) => {
+    setEditingNews(news);
+    setShowNewsModal(true);
+  };
+
+  const saveNews = () => {
+    if (editingNews.id === 0) {
+      syncNewsData([{ ...editingNews, id: Date.now() }, ...newsArticles]);
+    } else {
+      syncNewsData(newsArticles.map(a => a.id === editingNews.id ? editingNews : a));
+    }
+    setShowNewsModal(false);
+  };
+
+  const deleteNews = (id: number) => {
+    if (window.confirm("確定刪除這篇文章？前台也將同步移除。")) {
+      syncNewsData(newsArticles.filter(a => a.id !== id));
+    }
+  };
+
+  // --- 專案 CRUD 邏輯 ---
   const openAddProject = () => {
     setEditingProject({ id: 0, name: '', region: '本地/香港', allocated: 0, monthsActive: 1, roi: 0, status: '建倉期預警' });
     setShowProjectModal(true);
@@ -179,7 +225,7 @@ export default function AdminPage() {
                   <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">動態資金監控系統 <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-md border border-emerald-500/30">實時運算中</span></h1>
                   <p className="text-slate-400">所有參數皆可點擊修改，系統將自動重算成本水位與收益配置。</p>
                 </div>
-                <button onClick={() => alert('開發中功能：此處將開啟上傳視窗，讀取銀行的 CSV 檔自動映射各專案金流。')} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium flex items-center text-white border border-slate-600 transition-colors">
+                <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium flex items-center text-white border border-slate-600 transition-colors">
                   <UploadCloud size={16} className="mr-2"/> 導入銀行月結單對帳
                 </button>
               </div>
@@ -271,7 +317,7 @@ export default function AdminPage() {
                   <button onClick={handleGenerateNews} className="px-4 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg text-sm font-bold transition-all flex items-center shadow-lg hover:shadow-purple-900/20">
                     <Cpu size={16} className="mr-2"/> AI 一鍵生成研報
                   </button>
-                  <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all flex items-center shadow-lg shadow-blue-500/20">
+                  <button onClick={openAddNews} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all flex items-center shadow-lg shadow-blue-500/20">
                     <Plus size={16} className="mr-1"/> 手動發佈文章
                   </button>
                 </div>
@@ -301,8 +347,8 @@ export default function AdminPage() {
                           }
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button className="text-blue-400 hover:text-white px-2 transition-colors"><Edit3 size={16}/></button>
-                          <button className="text-red-400 hover:text-white px-2 transition-colors" onClick={() => {if(window.confirm('確定刪除文章？')) setNewsArticles(newsArticles.filter(a => a.id !== article.id))}}><Trash2 size={16}/></button>
+                          <button onClick={() => openEditNews(article)} className="text-blue-400 hover:text-white px-2 transition-colors"><Edit3 size={16}/></button>
+                          <button onClick={() => deleteNews(article.id)} className="text-red-400 hover:text-white px-2 transition-colors"><Trash2 size={16}/></button>
                         </td>
                       </tr>
                     ))}
@@ -390,7 +436,7 @@ export default function AdminPage() {
                      </div>
                      <div className="flex items-center gap-3 pt-2">
                        <input type="checkbox" defaultChecked className="w-4 h-4 accent-emerald-500 rounded cursor-pointer" id="sms-notify" />
-                       <label htmlFor="sms-notify" className="text-sm text-slate-300 cursor-pointer">當收到新潛在客戶諮詢時，發送手機 SMS 簡訊通知管理員</label>
+                       <label htmlFor="sms-notify" className="text-sm text-slate-300 cursor-pointer">當收到新潛客戶諮詢時，發送手機 SMS 簡訊通知管理員</label>
                      </div>
                      <div className="mt-4 pt-4 border-t border-slate-800 flex justify-end">
                         <button className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold transition-all border border-slate-700">更新通知設定</button>
@@ -469,6 +515,59 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* ================= 新聞新增/編輯彈窗 (Modal) ================= */}
+      {showNewsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowNewsModal(false)}></div>
+          <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 md:p-8 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white">{editingNews.id === 0 ? '發佈新文章' : '編輯文章'}</h2>
+              <button onClick={() => setShowNewsModal(false)} className="text-slate-400 hover:text-white transition-colors"><X size={24}/></button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">文章標題</label>
+                <input type="text" value={editingNews.title} onChange={(e) => setEditingNews({...editingNews, title: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">分類</label>
+                  <select value={editingNews.category} onChange={(e) => setEditingNews({...editingNews, category: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500">
+                    <option value="實時研報">實時研報</option>
+                    <option value="政策解讀">政策解讀</option>
+                    <option value="行業洞察">行業洞察</option>
+                    <option value="市場預警">市場預警</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">發佈日期</label>
+                  <input type="date" value={editingNews.date} onChange={(e) => setEditingNews({...editingNews, date: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">文章摘要 (顯示於首頁卡片)</label>
+                <textarea value={editingNews.summary} onChange={(e) => setEditingNews({...editingNews, summary: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500 h-20 resize-none" />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">深度內容全文 (支持分段)</label>
+                <textarea value={editingNews.fullText} onChange={(e) => setEditingNews({...editingNews, fullText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500 h-40 resize-none" />
+              </div>
+              <div className="flex items-center mt-2">
+                <input type="checkbox" id="publish-status" checked={editingNews.published} onChange={(e) => setEditingNews({...editingNews, published: e.target.checked})} className="w-4 h-4 accent-blue-500 cursor-pointer" />
+                <label htmlFor="publish-status" className="ml-2 text-sm text-slate-300 cursor-pointer">立即在前台首頁發佈展示</label>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-slate-800 flex justify-end gap-3">
+              <button onClick={() => setShowNewsModal(false)} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors font-medium">取消</button>
+              <button onClick={saveNews} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-blue-500/20">儲存並發佈</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
