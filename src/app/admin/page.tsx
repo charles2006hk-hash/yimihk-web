@@ -43,7 +43,7 @@ export default function AdminPage() {
   const targetROI = ((annualInterestCost + (upfrontFeeCost / capitalConfig.durationYears)) / capitalConfig.principal) * 100;
   const currentAvgROI = totalAllocated === 0 ? 0 : projects.reduce((sum, p) => sum + (Number(p.roi) * (Number(p.allocated)/totalAllocated)), 0);
 
-  // ================= 3. AI 智庫狀態 (新增同步邏輯) =================
+  // ================= 3. AI 智庫狀態 =================
   const [newsArticles, setNewsArticles] = useState([
     { id: 1, title: '香港「超級聯繫人」政策升級：大灣區資本跨境流動新指南', category: '政策解讀', date: '2026-04-10', summary: '最新政策放寬了大灣區企業在港融資的限制，預計將釋放超 500 億資金流動性。', fullText: '根據集團 AI 智庫即時分析...', published: true },
     { id: 2, title: 'AIGC 工業應用報告：生成式 AI 如何降低 40% 營銷成本', category: '行業洞察', date: '2026-04-09', summary: '多媒體廣告矩陣全面引入 AI 輔助，重塑數字創意產業鏈。', fullText: '結合本週全球科技股財報數據...', published: true },
@@ -52,6 +52,31 @@ export default function AdminPage() {
 
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [editingNews, setEditingNews] = useState({ id: 0, title: '', category: '行業洞察', date: '', summary: '', fullText: '', published: true });
+
+  // ================= 4. CRM 與單據開立系統狀態 (新增) =================
+  const [crmRecords, setCrmRecords] = useState([
+    { id: 'INV-20260823-01', client: 'TKP-DBPP', date: '2026-08-23', amount: 8000, type: 'QUOTATION', status: '待處理' },
+    { id: 'INV-20260820-05', client: 'Global Trade Ltd.', date: '2026-08-20', amount: 15000, type: 'INVOICE', status: '已結清' }
+  ]);
+
+  const [previewInvoice, setPreviewInvoice] = useState<any>(null);
+  const [invType, setInvType] = useState('QUOTATION');
+  const [invTotal, setInvTotal] = useState(8000);
+  const [invDiscountPct, setInvDiscountPct] = useState(20);
+  const [invMaint, setInvMaint] = useState(2500);
+
+  // 處理浮點數精度計算 (Financial Safety)
+  const safeFloat = (num: number) => Math.round(num * 100) / 100;
+  const originalAmount = invTotal > 0 ? safeFloat(invTotal / (1 - (invDiscountPct / 100))) : 0;
+  const discountAmount = safeFloat(originalAmount - invTotal);
+  const phase1 = safeFloat(invTotal * 0.6);
+  const phase2 = safeFloat(invTotal - phase1);
+
+  const openInvoicePreview = (record: any) => {
+    setPreviewInvoice(record);
+    setInvType(record.type);
+    setInvTotal(record.amount);
+  };
 
   // 初始化：讀取本地緩存的智庫數據
   useEffect(() => {
@@ -67,7 +92,7 @@ export default function AdminPage() {
     localStorage.setItem('yimi_news_data', JSON.stringify(updatedNews));
   };
 
-  // ================= 4. 操作邏輯函數 =================
+  // ================= 5. 操作邏輯函數 =================
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === 'yimi2026') { setIsLoggedIn(true); setError(''); } 
@@ -189,19 +214,22 @@ export default function AdminPage() {
   // ================= 主系統畫面 =================
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans">
-      <nav className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center z-40 relative shadow-md">
+      {/* 導覽列：列印時隱藏 */}
+      <nav className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center z-40 relative shadow-md print:hidden">
         <div className="font-bold text-xl text-white flex items-center gap-3">
           <div className="p-2 bg-blue-600/20 rounded-lg"><Cpu className="text-blue-500" size={20} /></div>YIMI Admin
         </div>
         <button onClick={() => setIsLoggedIn(false)} className="flex items-center text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors"><LogOut size={16} className="mr-2" /> 登出系統</button>
       </nav>
 
-      <div className="flex flex-1 overflow-hidden">
+      {/* 主體區塊：列印時隱藏，讓 Modal 獨佔列印版面 */}
+      <div className="flex flex-1 overflow-hidden print:hidden">
         {/* 左側選單 */}
         <aside className="w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-2 overflow-y-auto">
           {[
             { id: 'dashboard', icon: <Activity size={18}/>, label: '系統總覽' },
             { id: 'capital', icon: <PieChart size={18}/>, label: '資金監控系統' },
+            { id: 'crm', icon: <Briefcase size={18}/>, label: '客戶 CRM & 財務開單' }, // 新增的 CRM 選單
             { id: 'news', icon: <FileText size={18}/>, label: 'AI 智庫管理' },
             { id: 'leads', icon: <Mail size={18}/>, label: '業務諮詢名單' },
             { id: 'settings', icon: <Settings size={18}/>, label: '系統設定' }
@@ -330,6 +358,56 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* ================= 模組：客戶 CRM & 財務開單 (新增) ================= */}
+          {activeTab === 'crm' && (
+             <div className="animate-in fade-in duration-300">
+               <div className="flex justify-between items-end mb-8">
+                 <div>
+                   <h1 className="text-3xl font-bold text-white mb-2">客戶 CRM & 財務單據系統</h1>
+                   <p className="text-slate-400">管理客戶資料、歷史訂單，並自動產生 PDF 報價單與發票。</p>
+                 </div>
+                 <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center">
+                   <Plus size={16} className="mr-1"/> 新增客戶單據
+                 </button>
+               </div>
+               
+               <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                 <table className="w-full text-left text-sm text-slate-300">
+                   <thead className="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                     <tr>
+                       <th className="px-6 py-4 font-medium tracking-wider">單號 (Ref No)</th>
+                       <th className="px-6 py-4 font-medium tracking-wider">客戶名稱</th>
+                       <th className="px-6 py-4 font-medium tracking-wider">日期</th>
+                       <th className="px-6 py-4 font-medium tracking-wider">總金額 (HKD)</th>
+                       <th className="px-6 py-4 font-medium tracking-wider">狀態</th>
+                       <th className="px-6 py-4 text-right font-medium tracking-wider">操作</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-slate-800/50">
+                     {crmRecords.map((record) => (
+                       <tr key={record.id} className="hover:bg-slate-800/40 transition-colors">
+                         <td className="px-6 py-4 font-mono text-blue-400">{record.id}</td>
+                         <td className="px-6 py-4 font-bold text-white">{record.client}</td>
+                         <td className="px-6 py-4 text-slate-400">{record.date}</td>
+                         <td className="px-6 py-4 font-mono font-medium">$ {record.amount.toLocaleString()}</td>
+                         <td className="px-6 py-4">
+                           <span className={`px-2 py-1 rounded text-xs border ${record.status === '已結清' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                             {record.type} - {record.status}
+                           </span>
+                         </td>
+                         <td className="px-6 py-4 text-right">
+                           <button onClick={() => openInvoicePreview(record)} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-md transition-colors text-xs flex items-center justify-end ml-auto border border-slate-600">
+                             <FileText size={12} className="mr-1"/> 預覽 / 列印單據
+                           </button>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             </div>
           )}
 
           {/* ================= 模組 3：AI 智庫發佈系統 ================= */}
@@ -499,7 +577,7 @@ export default function AdminPage() {
 
       {/* ================= 專案新增/編輯彈窗 (Modal) ================= */}
       {showProjectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:hidden">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowProjectModal(false)}></div>
           <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 md:p-8 animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6">
@@ -553,10 +631,9 @@ export default function AdminPage() {
 
       {/* ================= 新聞新增/編輯彈窗 (Modal) ================= */}
       {showNewsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:hidden">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowNewsModal(false)}></div>
           
-          {/* 🌟 修改這一行：加上 max-h-[90vh] 和 overflow-y-auto */}
           <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 md:p-8 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
             
             <div className="flex justify-between items-center mb-6">
@@ -589,7 +666,6 @@ export default function AdminPage() {
                 <textarea value={editingNews.summary} onChange={(e) => setEditingNews({...editingNews, summary: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500 h-20 resize-none" />
               </div>
               <div>
-                {/* 🌟 順便把這裡的 textarea 高度加高 (h-64)，讓編輯長文更舒服 */}
                 <label className="block text-sm text-slate-400 mb-1">深度內容全文 (支持分段)</label>
                 <textarea value={editingNews.fullText} onChange={(e) => setEditingNews({...editingNews, fullText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500 h-64 resize-none" />
               </div>
@@ -607,6 +683,189 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ================= CRM 單據預覽 / 列印彈窗 (Invoice Modal) (新增) ================= */}
+      {previewInvoice && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 print:p-0 print:static print:z-auto print:flex-none print:block bg-slate-950/80 backdrop-blur-sm print:bg-white print:backdrop-blur-none">
+          
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible bg-[#cbd5e1] print:bg-white p-6 md:p-10 rounded-2xl print:rounded-none shadow-2xl print:shadow-none animate-in zoom-in-95 duration-200">
+            
+            {/* 操作列 (列印時隱藏) */}
+            <div className="flex justify-between items-center mb-6 print:hidden">
+              <div className="text-slate-700">
+                <button onClick={() => window.print()} className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold shadow-lg flex items-center transition-transform hover:-translate-y-0.5">
+                  🖨️ 匯出 PDF / 列印
+                </button>
+                <p className="text-xs text-slate-500 mt-2">提示：列印時請將「邊界」設為「無」，系統會自動隱藏後台選單。</p>
+              </div>
+              <button onClick={() => setPreviewInvoice(null)} className="p-2 bg-slate-400 hover:bg-slate-500 rounded-full text-white transition-colors"><X size={24}/></button>
+            </div>
+
+            {/* ==== 單據區塊 ==== */}
+            <div className="mx-auto bg-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] print:shadow-none relative p-[10mm_15mm] box-border w-[210mm] min-h-[297mm] print:w-full print:min-h-0 print:h-[297mm] overflow-hidden text-[#334155] font-sans text-[12px] print:text-[11px]">
+              
+              <style dangerouslySetInnerHTML={{__html: `
+                .inv-primary { color: #0f172a; }
+                .inv-secondary { color: #3b82f6; }
+                .inv-muted { color: #64748b; }
+                .inv-bg { background-color: #f8fafc; }
+                .inv-input { display: inline-block; padding: 2px 4px; background-color: #dbeafe; border-radius: 4px; color: #3b82f6; font-weight: 900; outline: none; text-align: right; border: none; }
+                .inv-input:focus { background-color: #bfdbfe; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+                @media print { 
+                  .inv-input { background-color: transparent; padding: 0; color: inherit; } 
+                }
+              `}} />
+
+              {invType === 'RECEIPT' && (
+                <div className="absolute top-[30px] right-[180px] text-[45px] font-black text-red-500 border-4 border-red-500 p-[10px_25px] rounded-lg -rotate-12 opacity-15 tracking-[6px] z-10 pointer-events-none">
+                  PAID
+                </div>
+              )}
+
+              <header className="flex justify-between items-start border-b-2 border-[#0f172a] pb-3 mb-[15px] relative z-20 print:mb-[10px] print:pb-2">
+                <div className="w-[55%]">
+                  <div className="text-[18px] font-black inv-primary tracking-wide mb-1.5">YIMI INTERNATIONAL HOLDINGS LIMITED</div>
+                  <div className="text-[11px] inv-muted leading-relaxed">
+                    RM11, 22/F, TOWER B, NEW TRADE PLAZA<br/>
+                    6 ON PING STREET, SHA TIN, N.T., HONG KONG<br/>
+                    Tel: (+852) 3996 9796
+                  </div>
+                </div>
+                <div className="w-[40%] text-right">
+                  <select value={invType} onChange={(e) => setInvType(e.target.value)} className="text-[24px] font-light inv-primary tracking-[2px] mb-2 bg-transparent border-none outline-none text-right uppercase cursor-pointer hover:bg-slate-50 print:appearance-none print:pointer-events-none">
+                    <option value="QUOTATION">QUOTATION</option>
+                    <option value="INVOICE">INVOICE</option>
+                    <option value="RECEIPT">RECEIPT</option>
+                  </select>
+                  <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[11px]">
+                    <span className="font-bold inv-muted">Date:</span>
+                    <span className="font-bold inv-primary">{previewInvoice.date}</span>
+                    <span className="font-bold inv-muted">Ref No:</span>
+                    <span className="font-bold inv-primary">{previewInvoice.id}</span>
+                    <span className="font-bold inv-muted">Bill To:</span>
+                    <span className="font-bold inv-primary">{previewInvoice.client}</span>
+                  </div>
+                </div>
+              </header>
+
+              <table className="w-full border-collapse mb-[15px] print:mb-2">
+                <thead>
+                  <tr>
+                    <th className="inv-bg inv-muted text-[10px] uppercase tracking-wide p-[8px_10px] text-left border-y border-[#e2e8f0]">Project Description</th>
+                    <th className="inv-bg inv-muted text-[10px] uppercase tracking-wide p-[8px_10px] text-right border-y border-[#e2e8f0] w-[140px]">Net Amount (HKD)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
+                      <span className="text-[13px] font-bold inv-primary mb-1 block">1. Official Website Development & Design</span>
+                      <span className="inv-muted text-[11px]">Build a responsive website using modern full-stack architecture (Next.js + Firebase), including news and event registration modules.</span>
+                      
+                      <div className="mt-[10px] p-[8px_10px] inv-bg border-l-3 border-[#3b82f6] text-[11px] w-[85%]">
+                        <div className="flex justify-between mb-1">
+                          <span>Standard Value:</span>
+                          <span><del>$ {originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</del></span>
+                        </div>
+                        <div className="flex justify-between font-extrabold inv-secondary">
+                          <span>Partnership Discount (
+                            <input type="number" value={invDiscountPct} onChange={(e) => setInvDiscountPct(Number(e.target.value))} className="inv-input w-[40px] text-center mx-1"/>% OFF):
+                          </span>
+                          <span>- $ {discountAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-[10px] border-b border-[#e2e8f0] align-bottom text-right print:p-[6px_8px]" rowSpan={3}>
+                      <div className="text-[16px] font-black inv-primary flex items-center justify-end">
+                        <span className="inv-muted mr-1">$</span>
+                        <input type="number" value={invTotal} onChange={(e) => setInvTotal(Number(e.target.value))} className="inv-input text-right w-[90px] text-[16px]" />
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
+                      <span className="text-[13px] font-bold inv-primary mb-1 block">2. Database Migration & Data Entry</span>
+                      <span className="inv-muted text-[11px]">Assist in structuring and importing the legacy data (Softcopy) provided by the client into the new system.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
+                      <span className="text-[13px] font-bold inv-primary mb-1 block">3. Domain Transfer & Hosting Setup</span>
+                      <span className="inv-muted text-[11px]">Transfer and bind the existing domain to the new server.</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="text-[11px] font-bold inv-primary uppercase tracking-wide m-[12px_0_6px_0] pb-1 border-b border-[#e2e8f0] print:m-[10px_0_4px_0]">Payment Schedule</div>
+              <table className="w-full border-collapse mb-[15px] print:mb-2">
+                <tbody>
+                  <tr>
+                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
+                      <span className="text-[13px] font-bold inv-primary mb-1 block">Phase 1 (60%)</span>
+                      <span className="inv-muted text-[11px]">Payable upon project commencement and issuance of this document.</span>
+                    </td>
+                    <td className="p-[10px] border-b border-[#e2e8f0] font-bold text-right w-[140px] print:p-[6px_8px]">
+                      <span className="inv-muted mr-1">$</span>{phase1.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
+                      <span className="text-[13px] font-bold inv-primary mb-1 block">Phase 2 (40%)</span>
+                      <span className="inv-muted text-[11px]">Payable upon project completion, data entry fulfillment, and official launch.</span>
+                    </td>
+                    <td className="p-[10px] border-b border-[#e2e8f0] font-bold text-right w-[140px] print:p-[6px_8px]">
+                      <span className="inv-muted mr-1">$</span>{phase2.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="text-[11px] font-bold inv-primary uppercase tracking-wide m-[12px_0_6px_0] pb-1 border-b border-[#e2e8f0] print:m-[10px_0_4px_0]">Annual Maintenance</div>
+              <table className="w-full border-collapse mb-[15px] print:mb-2">
+                <tbody>
+                  <tr>
+                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
+                      <span className="text-[13px] font-bold inv-primary mb-1 block">Annual System Maintenance Fee</span>
+                      <span className="inv-muted text-[11px]">Includes system bug fixes, cloud server (Vercel), and database storage.</span>
+                    </td>
+                    <td className="p-[10px] border-b border-[#e2e8f0] align-top text-right w-[140px] print:p-[6px_8px] flex justify-end items-center">
+                      <span className="inv-muted mr-1">$</span>
+                      <input type="number" value={invMaint} onChange={(e) => setInvMaint(Number(e.target.value))} className="inv-input text-right w-[70px]" />
+                      <span className="ml-1 inv-muted text-[10px]">/ Year</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="flex gap-[15px] mb-[15px] print:mb-[10px] break-inside-avoid">
+                <div className="flex-1 inv-bg p-[10px_12px] rounded-md border border-[#e2e8f0]">
+                  <div className="text-[11px] font-bold inv-primary uppercase tracking-wide mb-2">Banking Information</div>
+                  <div className="mb-1.5"><span className="text-[10px] inv-muted block uppercase">Bank Name</span><span className="text-[11px] font-bold inv-primary block">STANDARD CHARTERED BANK (HK)</span></div>
+                  <div className="mb-1.5"><span className="text-[10px] inv-muted block uppercase">Account Name</span><span className="text-[11px] font-bold inv-primary block">YIMI INTERNATIONAL HOLDINGS LTD.</span></div>
+                  <div><span className="text-[10px] inv-muted block uppercase">Account No. (HKD)</span><span className="text-[13px] font-black inv-primary block">41510814091</span></div>
+                </div>
+                
+                <div className="flex-1 text-[9.5px] inv-muted text-justify leading-relaxed">
+                  <strong className="inv-primary inline-block mb-0.5 text-[10px]">【Terms & Conditions】</strong><br/>
+                  <strong className="inv-primary">1. Content Liability:</strong> The Client warrants that they own or have obtained necessary rights to use all text/images provided to YIMI. YIMI holds no liability for copyright disputes arising from client-provided content.<br/>
+                  <strong className="inv-primary">2. Intellectual Property:</strong> Upon full clearance of payment, the Client retains ownership of the website data and frontend visual output. YIMI retains all IP rights to the underlying system architecture and codebases.
+                </div>
+              </div>
+
+              <div className="flex justify-between mt-[20px] print:mt-[15px] break-inside-avoid">
+                <div className="w-[42%]">
+                  <div className="border-b border-[#0f172a] h-[35px] mb-1.5"></div>
+                  <div className="text-[10px] inv-muted">For and on behalf of<br/><strong className="inv-primary">YIMI INTERNATIONAL HOLDINGS LIMITED</strong></div>
+                </div>
+                <div className="w-[42%]">
+                  <div className="border-b border-[#0f172a] h-[35px] mb-1.5"></div>
+                  <div className="text-[10px] inv-muted">Accepted and Agreed by<br/><strong className="inv-primary">{previewInvoice.client}</strong></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
