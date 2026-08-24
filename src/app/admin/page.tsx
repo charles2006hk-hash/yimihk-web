@@ -693,7 +693,6 @@ export default function AdminPage() {
                 .inv-input { display: inline-block; padding: 2px 4px; background-color: #dbeafe; border-radius: 4px; color: #3b82f6; font-weight: 900; outline: none; border: none; }
                 .inv-input:focus { background-color: #bfdbfe; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
                 
-                /* 🌟 強制消除列印邊界，完美單頁 A4 */
                 @page { 
                   size: A4; 
                   margin: 0mm; 
@@ -727,7 +726,6 @@ export default function AdminPage() {
               <header className="flex justify-between items-start border-b-2 border-[#0f172a] pb-3 mb-[15px] print-compact-mb relative z-20">
                 <div className="w-[55%]">
                   <div className="flex items-center gap-2 mb-2">
-                     {/* 請確保 public 資料夾中有 logo.png */}
                      <img src="/logo.png" alt="YIMI" className="h-10 w-auto object-contain" />
                      <div className="text-[20px] font-black inv-primary tracking-wider mt-1">YIMI GROUP</div>
                   </div>
@@ -858,13 +856,14 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between mt-[20px] print:mt-[10px] break-inside-avoid">
+              {/* 🌟 加大簽名區間高度：h-[65px] 並增加了 print:mt-[20px] */}
+              <div className="flex justify-between mt-[30px] print:mt-[20px] break-inside-avoid">
                 <div className="w-[42%]">
-                  <div className="border-b border-[#0f172a] h-[35px] mb-1.5"></div>
+                  <div className="border-b border-[#0f172a] h-[65px] mb-2"></div>
                   <div className="text-[10px] print-text-xs inv-muted">For and on behalf of<br/><strong className="inv-primary">YIMI GROUP</strong></div>
                 </div>
                 <div className="w-[42%]">
-                  <div className="border-b border-[#0f172a] h-[35px] mb-1.5"></div>
+                  <div className="border-b border-[#0f172a] h-[65px] mb-2"></div>
                   <div className="text-[10px] print-text-xs inv-muted">Accepted and Agreed by<br/><strong className="inv-primary">{previewInvoice.client === '請輸入客戶名稱' ? '___________________' : previewInvoice.client}</strong></div>
                 </div>
               </div>
