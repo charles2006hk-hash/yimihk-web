@@ -25,7 +25,7 @@ export default function CrmInvoiceModule() {
   const defaultSinglePhase = [{ id: 1, name: 'Full Payment', desc: 'Payable upon project commencement and issuance of this document.', percent: 100 }];
   const [paymentPhases, setPaymentPhases] = useState(defaultSinglePhase);
 
-  // 處理浮點數精度計算 (Financial Safety)
+  // 處理浮點數精度計算
   const safeFloat = (num: number) => Math.round(num * 100) / 100;
   const originalAmount = invTotal > 0 ? safeFloat(invTotal / (1 - (invDiscountPct / 100))) : 0;
   const discountAmount = safeFloat(originalAmount - invTotal);
@@ -54,18 +54,42 @@ export default function CrmInvoiceModule() {
     setPaymentPhases(defaultSinglePhase);
   };
 
+  // 🌟 自動化流程：儲存並判斷是否自動生成 Receipt
   const saveInvoiceToCRM = () => {
     const exists = crmRecords.find(r => r.id === previewInvoice.id);
     const updatedRecord = { 
       ...previewInvoice, amount: invTotal, type: invType, phases: paymentPhases, 
       status: invStatus, discountPct: invDiscountPct, maint: invMaint              
     };
+    
+    let newRecords = [...crmRecords];
+    
     if (exists) {
-      setCrmRecords(crmRecords.map(r => r.id === previewInvoice.id ? updatedRecord : r));
+      newRecords = newRecords.map(r => r.id === previewInvoice.id ? updatedRecord : r);
     } else {
-      setCrmRecords([updatedRecord, ...crmRecords]);
+      newRecords = [updatedRecord, ...newRecords];
     }
-    alert("✅ 單據已成功儲存至系統！");
+
+    // 💡 核心邏輯：如果儲存的是 INVOICE 且狀態改為「已結清」，自動產生一筆 RECEIPT
+    if (invType === 'INVOICE' && invStatus === '已結清') {
+      const receiptId = updatedRecord.id.includes('INV-') 
+        ? updatedRecord.id.replace('INV-', 'REC-') 
+        : `REC-${updatedRecord.id}`;
+        
+      const receiptExists = newRecords.find(r => r.id === receiptId);
+      
+      if (!receiptExists) {
+        const newReceipt = { ...updatedRecord, id: receiptId, type: 'RECEIPT', status: '已結清' };
+        newRecords = [newReceipt, ...newRecords]; // 將新的 Receipt 加入列表最上方
+        alert("✅ 單據已儲存，系統已為您自動產生對應的 RECEIPT 收據！");
+      } else {
+        alert("✅ 單據已成功儲存至系統！");
+      }
+    } else {
+      alert("✅ 單據已成功儲存至系統！");
+    }
+
+    setCrmRecords(newRecords);
     setPreviewInvoice(null);
   };
 
@@ -82,10 +106,21 @@ export default function CrmInvoiceModule() {
     const clonedElement = originalElement.cloneNode(true) as HTMLElement;
     const originalInputs = originalElement.querySelectorAll('input, textarea, select');
     const clonedInputs = clonedElement.querySelectorAll('input, textarea, select');
+    
     originalInputs.forEach((input: any, index) => {
-      if (input.tagName === 'SELECT') (clonedInputs[index] as HTMLSelectElement).value = input.value;
-      else if (input.tagName === 'TEXTAREA') clonedInputs[index].innerHTML = input.value;
-      else clonedInputs[index].setAttribute('value', input.value);
+      if (input.tagName === 'SELECT') {
+        const options = clonedInputs[index].querySelectorAll('option');
+        options.forEach(opt => {
+          if (opt.value === input.value) opt.setAttribute('selected', 'selected');
+          else opt.removeAttribute('selected');
+        });
+      }
+      else if (input.tagName === 'TEXTAREA') {
+        clonedInputs[index].innerHTML = input.value;
+      }
+      else {
+        clonedInputs[index].setAttribute('value', input.value);
+      }
     });
 
     const iframe = document.createElement('iframe');
@@ -108,6 +143,8 @@ export default function CrmInvoiceModule() {
             @page { size: A4; margin: 0; }
             body { margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: ui-sans-serif, system-ui, sans-serif; }
             .inv-primary { color: #0f172a; } .inv-secondary { color: #3b82f6; } .inv-muted { color: #64748b; } .inv-bg { background-color: #f8fafc; }
+            input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+            input[type=number] { -moz-appearance: textfield; }
             input, textarea, select { border: none !important; background: transparent !important; outline: none !important; resize: none !important; appearance: none !important; box-shadow: none !important; color: inherit !important; }
             #${elementId} { width: 210mm !important; height: 297mm !important; max-height: 297mm !important; padding: 12mm 15mm !important; box-sizing: border-box !important; overflow: hidden !important; page-break-after: avoid !important; }
             .print-hide-force { display: none !important; }
@@ -201,6 +238,8 @@ export default function CrmInvoiceModule() {
                 .inv-primary { color: #0f172a; } .inv-secondary { color: #3b82f6; } .inv-muted { color: #64748b; } .inv-bg { background-color: #f8fafc; }
                 .inv-input { display: inline-block; padding: 2px 4px; background-color: #dbeafe; border-radius: 4px; color: #3b82f6; font-weight: 900; outline: none; border: none; }
                 .inv-input:focus { background-color: #bfdbfe; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+                input[type=number]::-webkit-inner-spin-button, 
+                input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
               `}} />
 
               {invType === 'RECEIPT' && (
@@ -258,7 +297,7 @@ export default function CrmInvoiceModule() {
                         </div>
                         <div className="flex justify-between font-extrabold inv-secondary">
                           <span>Partnership Discount (
-                            <input type="number" value={invDiscountPct} onChange={(e) => setInvDiscountPct(Number(e.target.value))} className="w-[40px] bg-[#dbeafe] text-[#3b82f6] font-bold text-center rounded mx-1 outline-none border-none"/>% OFF):
+                            <input type="number" value={invDiscountPct} onChange={(e) => setInvDiscountPct(Number(e.target.value))} className="w-[50px] bg-[#dbeafe] text-[#3b82f6] font-bold text-center rounded mx-1 outline-none border-none"/>% OFF):
                           </span>
                           <span>- $ {discountAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                         </div>
@@ -313,7 +352,7 @@ export default function CrmInvoiceModule() {
                           <div className="flex items-center mb-1">
                             <input type="text" value={phase.name} onChange={(e) => updatePaymentPhase(phase.id, 'name', e.target.value)} className="text-[13px] font-bold inv-primary bg-transparent outline-none border-b border-transparent hover:border-slate-300 focus:border-blue-500 w-auto min-w-[80px]" />
                             <span className="text-[13px] font-bold inv-primary mx-1">(</span>
-                            <input type="number" value={phase.percent} onChange={(e) => updatePaymentPhase(phase.id, 'percent', Number(e.target.value))} className="bg-[#dbeafe] text-[#3b82f6] text-center rounded px-1 outline-none border-none w-[40px] text-[13px] font-bold" />
+                            <input type="number" value={phase.percent} onChange={(e) => updatePaymentPhase(phase.id, 'percent', Number(e.target.value))} className="bg-[#dbeafe] text-[#3b82f6] text-center rounded px-1 outline-none border-none w-[50px] text-[13px] font-bold" />
                             <span className="text-[13px] font-bold inv-primary">%)</span>
                           </div>
                           <textarea value={phase.desc} onChange={(e) => updatePaymentPhase(phase.id, 'desc', e.target.value)} className="inv-muted text-[11px] bg-transparent outline-none w-full resize-none overflow-hidden" rows={2} />
