@@ -72,15 +72,13 @@ export default function AdminPage() {
   const phase1 = safeFloat(invTotal * 0.6);
   const phase2 = safeFloat(invTotal - phase1);
 
-  // 🌟 開啟現有單據預覽
   const openInvoicePreview = (record: any) => {
     setPreviewInvoice(record);
     setInvType(record.type);
     setInvTotal(record.amount);
-    setInvDiscountPct(0); // 重置為預設
+    setInvDiscountPct(0); 
   };
 
-  // 🌟 新增空白客戶單據
   const openAddInvoice = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const newId = `INV-${todayStr.replace(/-/g, '')}-${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
@@ -99,7 +97,6 @@ export default function AdminPage() {
     setInvMaint(0);
   };
 
-  // 🌟 儲存當前單據到列表
   const saveInvoiceToCRM = () => {
     const exists = crmRecords.find(r => r.id === previewInvoice.id);
     const updatedRecord = { ...previewInvoice, amount: invTotal, type: invType };
@@ -132,7 +129,6 @@ export default function AdminPage() {
     else { setError('密碼錯誤，請重新輸入。'); }
   };
 
-  // --- 智庫 CRUD 邏輯 (真實串接 AI) ---
   const handleGenerateNews = async () => {
     setIsGeneratingAI(true);
     try {
@@ -173,7 +169,6 @@ export default function AdminPage() {
   };
   const deleteNews = (id: number) => { if (window.confirm("確定刪除這篇文章？前台也將同步移除。")) { syncNewsData(newsArticles.filter(a => a.id !== id)); } };
 
-  // --- 專案 CRUD 邏輯 ---
   const openAddProject = () => { setEditingProject({ id: 0, name: '', region: '本地/香港', allocated: 0, monthsActive: 1, roi: 0, status: '建倉期預警' }); setShowProjectModal(true); };
   const openEditProject = (project: any) => { setEditingProject(project); setShowProjectModal(true); };
   const saveProject = () => {
@@ -214,7 +209,6 @@ export default function AdminPage() {
       </nav>
 
       <div className="flex flex-1 overflow-hidden print:hidden">
-        {/* 左側選單 */}
         <aside className="w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-2 overflow-y-auto">
           {[
             { id: 'dashboard', icon: <Activity size={18}/>, label: '系統總覽' },
@@ -234,7 +228,6 @@ export default function AdminPage() {
           ))}
         </aside>
 
-        {/* 右側內容 */}
         <main className="flex-1 p-8 overflow-y-auto bg-slate-950 relative">
           
           {/* ================= 模組 1：系統總覽 ================= */}
@@ -350,7 +343,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ================= 模組：客戶 CRM & 財務開單 (新增) ================= */}
+          {/* ================= 模組：客戶 CRM & 財務開單 ================= */}
           {activeTab === 'crm' && (
              <div className="animate-in fade-in duration-300">
                <div className="flex justify-between items-end mb-8">
@@ -358,7 +351,6 @@ export default function AdminPage() {
                    <h1 className="text-3xl font-bold text-white mb-2">客戶 CRM & 財務單據系統</h1>
                    <p className="text-slate-400">管理客戶資料、歷史訂單，並自動產生 PDF 報價單與發票。</p>
                  </div>
-                 {/* 🌟 修復 1：綁定 openAddInvoice 事件，點擊即可新增空白單據 */}
                  <button onClick={openAddInvoice} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center">
                    <Plus size={16} className="mr-1"/> 新增客戶單據
                  </button>
@@ -516,7 +508,6 @@ export default function AdminPage() {
                <h1 className="text-3xl font-bold text-white mb-8">系統參數設定</h1>
 
                <div className="space-y-6 max-w-4xl">
-                 {/* 安全設定 */}
                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
                    <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><Key size={20} className="text-blue-500"/> 安全與權限</h3>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -530,7 +521,6 @@ export default function AdminPage() {
                    </div>
                  </div>
 
-                 {/* 通知設定 */}
                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
                    <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><Bell size={20} className="text-emerald-500"/> 接收通知設定</h3>
                    <div className="space-y-4">
@@ -548,7 +538,6 @@ export default function AdminPage() {
                    </div>
                  </div>
 
-                 {/* AI 設定 */}
                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
                    <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><ShieldCheck size={20} className="text-purple-500"/> AI 智庫引擎生成參數 (System Prompt)</h3>
                    <div>
@@ -641,7 +630,7 @@ export default function AdminPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-1">分類</label>
                   <select value={editingNews.category} onChange={(e) => setEditingNews({...editingNews, category: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500">
-                    <option value="實時研研報">實時研報</option>
+                    <option value="實時研報">實時研報</option>
                     <option value="政策解讀">政策解讀</option>
                     <option value="行業洞察">行業洞察</option>
                     <option value="市場預警">市場預警</option>
@@ -693,8 +682,8 @@ export default function AdminPage() {
               <button onClick={() => setPreviewInvoice(null)} className="p-2 bg-slate-400 hover:bg-slate-500 rounded-full text-white transition-colors"><X size={24}/></button>
             </div>
 
-            {/* ==== 單據區塊 ==== */}
-            <div className="mx-auto bg-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] print:shadow-none relative p-[10mm_15mm] box-border w-[210mm] min-h-[297mm] print:w-full print:min-h-0 print:h-[297mm] overflow-hidden text-[#334155] font-sans text-[12px] print:text-[11px]">
+            {/* ==== 單據列印區塊 ==== */}
+            <div className="print-a4-fix mx-auto bg-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] relative p-[10mm_15mm] box-border w-[210mm] min-h-[297mm] text-[#334155] font-sans text-[12px]">
               
               <style dangerouslySetInnerHTML={{__html: `
                 .inv-primary { color: #0f172a; }
@@ -703,8 +692,28 @@ export default function AdminPage() {
                 .inv-bg { background-color: #f8fafc; }
                 .inv-input { display: inline-block; padding: 2px 4px; background-color: #dbeafe; border-radius: 4px; color: #3b82f6; font-weight: 900; outline: none; border: none; }
                 .inv-input:focus { background-color: #bfdbfe; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+                
+                /* 🌟 強制消除列印邊界，完美單頁 A4 */
+                @page { 
+                  size: A4; 
+                  margin: 0mm; 
+                }
                 @media print { 
-                  .inv-input { background-color: transparent; padding: 0; color: inherit; } 
+                  body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
+                  .inv-input { background-color: transparent !important; padding: 0 !important; color: inherit !important; } 
+                  .print-a4-fix { 
+                    width: 210mm !important; 
+                    height: 297mm !important; 
+                    padding: 12mm 15mm !important; 
+                    margin: 0 !important; 
+                    box-shadow: none !important; 
+                    overflow: hidden !important; 
+                    page-break-after: avoid !important;
+                  }
+                  .print-compact-mb { margin-bottom: 8px !important; }
+                  .print-compact-p { padding: 4px 6px !important; }
+                  .print-text-sm { font-size: 11px !important; }
+                  .print-text-xs { font-size: 9px !important; }
                 }
               `}} />
 
@@ -714,14 +723,15 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* 🌟 抬頭與 LOGO 更新區塊 */}
-              <header className="flex justify-between items-start border-b-2 border-[#0f172a] pb-3 mb-[15px] relative z-20 print:mb-[10px] print:pb-2">
+              {/* 🌟 抬頭與 LOGO 區塊 */}
+              <header className="flex justify-between items-start border-b-2 border-[#0f172a] pb-3 mb-[15px] print-compact-mb relative z-20">
                 <div className="w-[55%]">
-                  <div className="flex items-center gap-3 mb-2">
-                     <div className="w-10 h-10 bg-[#0f172a] rounded-lg flex items-center justify-center text-white font-black text-xl">Y</div>
-                     <div className="text-[20px] font-black inv-primary tracking-wider">YIMI GROUP</div>
+                  <div className="flex items-center gap-2 mb-2">
+                     {/* 請確保 public 資料夾中有 logo.png */}
+                     <img src="/logo.png" alt="YIMI" className="h-10 w-auto object-contain" />
+                     <div className="text-[20px] font-black inv-primary tracking-wider mt-1">YIMI GROUP</div>
                   </div>
-                  <div className="text-[11px] inv-muted leading-relaxed">
+                  <div className="text-[11px] print-text-sm inv-muted leading-relaxed">
                     RM11, 22/F, TOWER B, NEW TRADE PLAZA<br/>
                     6 ON PING STREET, SHA TIN, N.T., HONG KONG<br/>
                     Tel: (+852) 3996 9796 | Email: info@yimihk.com
@@ -733,7 +743,7 @@ export default function AdminPage() {
                     <option value="INVOICE">INVOICE</option>
                     <option value="RECEIPT">RECEIPT</option>
                   </select>
-                  <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[11px] items-center justify-end text-right">
+                  <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[11px] print-text-sm items-center justify-end text-right">
                     <span className="font-bold inv-muted">Date:</span>
                     <input type="date" value={previewInvoice.date} onChange={(e)=>setPreviewInvoice({...previewInvoice, date: e.target.value})} className="font-bold inv-primary bg-transparent border-none outline-none text-right hover:bg-slate-100 cursor-pointer" />
                     <span className="font-bold inv-muted">Ref No:</span>
@@ -744,20 +754,20 @@ export default function AdminPage() {
                 </div>
               </header>
 
-              <table className="w-full border-collapse mb-[15px] print:mb-2">
+              <table className="w-full border-collapse mb-[15px] print-compact-mb">
                 <thead>
                   <tr>
-                    <th className="inv-bg inv-muted text-[10px] uppercase tracking-wide p-[8px_10px] text-left border-y border-[#e2e8f0]">Project Description</th>
-                    <th className="inv-bg inv-muted text-[10px] uppercase tracking-wide p-[8px_10px] text-right border-y border-[#e2e8f0] w-[140px]">Net Amount (HKD)</th>
+                    <th className="inv-bg inv-muted text-[10px] uppercase tracking-wide p-[8px_10px] print-compact-p text-left border-y border-[#e2e8f0]">Project Description</th>
+                    <th className="inv-bg inv-muted text-[10px] uppercase tracking-wide p-[8px_10px] print-compact-p text-right border-y border-[#e2e8f0] w-[140px]">Net Amount (HKD)</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="print-text-sm">
                   <tr>
-                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
-                      <span className="text-[13px] font-bold inv-primary mb-1 block">1. Official Website Development & Design</span>
-                      <span className="inv-muted text-[11px]">Build a responsive website using modern full-stack architecture (Next.js + Firebase), including news and event registration modules.</span>
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top">
+                      <span className="text-[13px] print-text-sm font-bold inv-primary mb-1 block">1. Official Website Development & Design</span>
+                      <span className="inv-muted text-[11px] print-text-xs">Build a responsive website using modern full-stack architecture (Next.js + Firebase), including news and event registration modules.</span>
                       
-                      <div className="mt-[10px] p-[8px_10px] inv-bg border-l-3 border-[#3b82f6] text-[11px] w-[85%]">
+                      <div className="mt-[10px] p-[8px_10px] print-compact-p inv-bg border-l-3 border-[#3b82f6] text-[11px] print-text-xs w-[85%]">
                         <div className="flex justify-between mb-1">
                           <span>Standard Value:</span>
                           <span><del>$ {originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</del></span>
@@ -770,7 +780,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="p-[10px] border-b border-[#e2e8f0] align-bottom text-right print:p-[6px_8px]" rowSpan={3}>
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-bottom text-right" rowSpan={3}>
                       <div className="text-[16px] font-black inv-primary flex items-center justify-end">
                         <span className="inv-muted mr-1">$</span>
                         <input type="number" value={invTotal} onChange={(e) => setInvTotal(Number(e.target.value))} className="inv-input text-right w-[90px] text-[16px]" />
@@ -778,84 +788,84 @@ export default function AdminPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
-                      <span className="text-[13px] font-bold inv-primary mb-1 block">2. Database Migration & Data Entry</span>
-                      <span className="inv-muted text-[11px]">Assist in structuring and importing the legacy data (Softcopy) provided by the client into the new system.</span>
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top">
+                      <span className="text-[13px] print-text-sm font-bold inv-primary mb-1 block">2. Database Migration & Data Entry</span>
+                      <span className="inv-muted text-[11px] print-text-xs">Assist in structuring and importing the legacy data (Softcopy) provided by the client into the new system.</span>
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
-                      <span className="text-[13px] font-bold inv-primary mb-1 block">3. Domain Transfer & Hosting Setup</span>
-                      <span className="inv-muted text-[11px]">Transfer and bind the existing domain to the new server.</span>
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top">
+                      <span className="text-[13px] print-text-sm font-bold inv-primary mb-1 block">3. Domain Transfer & Hosting Setup</span>
+                      <span className="inv-muted text-[11px] print-text-xs">Transfer and bind the existing domain to the new server.</span>
                     </td>
                   </tr>
                 </tbody>
               </table>
 
-              <div className="text-[11px] font-bold inv-primary uppercase tracking-wide m-[12px_0_6px_0] pb-1 border-b border-[#e2e8f0] print:m-[10px_0_4px_0]">Payment Schedule</div>
-              <table className="w-full border-collapse mb-[15px] print:mb-2">
-                <tbody>
+              <div className="text-[11px] print-text-sm font-bold inv-primary uppercase tracking-wide m-[12px_0_6px_0] pb-1 border-b border-[#e2e8f0] print-compact-mb">Payment Schedule</div>
+              <table className="w-full border-collapse mb-[15px] print-compact-mb">
+                <tbody className="print-text-sm">
                   <tr>
-                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
-                      <span className="text-[13px] font-bold inv-primary mb-1 block">Phase 1 (60%)</span>
-                      <span className="inv-muted text-[11px]">Payable upon project commencement and issuance of this document.</span>
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top">
+                      <span className="text-[13px] print-text-sm font-bold inv-primary mb-1 block">Phase 1 (60%)</span>
+                      <span className="inv-muted text-[11px] print-text-xs">Payable upon project commencement and issuance of this document.</span>
                     </td>
-                    <td className="p-[10px] border-b border-[#e2e8f0] font-bold text-right w-[140px] print:p-[6px_8px]">
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] font-bold text-right w-[140px]">
                       <span className="inv-muted mr-1">$</span>{phase1.toLocaleString('en-US', {minimumFractionDigits: 2})}
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
-                      <span className="text-[13px] font-bold inv-primary mb-1 block">Phase 2 (40%)</span>
-                      <span className="inv-muted text-[11px]">Payable upon project completion, data entry fulfillment, and official launch.</span>
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top">
+                      <span className="text-[13px] print-text-sm font-bold inv-primary mb-1 block">Phase 2 (40%)</span>
+                      <span className="inv-muted text-[11px] print-text-xs">Payable upon project completion, data entry fulfillment, and official launch.</span>
                     </td>
-                    <td className="p-[10px] border-b border-[#e2e8f0] font-bold text-right w-[140px] print:p-[6px_8px]">
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] font-bold text-right w-[140px]">
                       <span className="inv-muted mr-1">$</span>{phase2.toLocaleString('en-US', {minimumFractionDigits: 2})}
                     </td>
                   </tr>
                 </tbody>
               </table>
 
-              <div className="text-[11px] font-bold inv-primary uppercase tracking-wide m-[12px_0_6px_0] pb-1 border-b border-[#e2e8f0] print:m-[10px_0_4px_0]">Annual Maintenance</div>
-              <table className="w-full border-collapse mb-[15px] print:mb-2">
-                <tbody>
+              <div className="text-[11px] print-text-sm font-bold inv-primary uppercase tracking-wide m-[12px_0_6px_0] pb-1 border-b border-[#e2e8f0] print-compact-mb">Annual Maintenance</div>
+              <table className="w-full border-collapse mb-[15px] print-compact-mb">
+                <tbody className="print-text-sm">
                   <tr>
-                    <td className="p-[10px] border-b border-[#e2e8f0] align-top print:p-[6px_8px]">
-                      <span className="text-[13px] font-bold inv-primary mb-1 block">Annual System Maintenance Fee</span>
-                      <span className="inv-muted text-[11px]">Includes system bug fixes, cloud server (Vercel), and database storage.</span>
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top">
+                      <span className="text-[13px] print-text-sm font-bold inv-primary mb-1 block">Annual System Maintenance Fee</span>
+                      <span className="inv-muted text-[11px] print-text-xs">Includes system bug fixes, cloud server (Vercel), and database storage.</span>
                     </td>
-                    <td className="p-[10px] border-b border-[#e2e8f0] align-top text-right w-[140px] print:p-[6px_8px] flex justify-end items-center">
+                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top text-right w-[140px] flex justify-end items-center">
                       <span className="inv-muted mr-1">$</span>
                       <input type="number" value={invMaint} onChange={(e) => setInvMaint(Number(e.target.value))} className="inv-input text-right w-[70px]" />
-                      <span className="ml-1 inv-muted text-[10px]">/ Year</span>
+                      <span className="ml-1 inv-muted text-[10px] print-text-xs">/ Year</span>
                     </td>
                   </tr>
                 </tbody>
               </table>
 
-              <div className="flex gap-[15px] mb-[15px] print:mb-[10px] break-inside-avoid">
-                <div className="flex-1 inv-bg p-[10px_12px] rounded-md border border-[#e2e8f0]">
-                  <div className="text-[11px] font-bold inv-primary uppercase tracking-wide mb-2">Banking Information</div>
-                  <div className="mb-1.5"><span className="text-[10px] inv-muted block uppercase">Bank Name</span><span className="text-[11px] font-bold inv-primary block">STANDARD CHARTERED BANK (HK)</span></div>
-                  <div className="mb-1.5"><span className="text-[10px] inv-muted block uppercase">Account Name</span><span className="text-[11px] font-bold inv-primary block">YIMI INTERNATIONAL HOLDINGS LTD.</span></div>
-                  <div><span className="text-[10px] inv-muted block uppercase">Account No. (HKD)</span><span className="text-[13px] font-black inv-primary block">41510814091</span></div>
+              <div className="flex gap-[15px] mb-[15px] print-compact-mb break-inside-avoid">
+                <div className="flex-1 inv-bg p-[10px_12px] print-compact-p rounded-md border border-[#e2e8f0]">
+                  <div className="text-[11px] print-text-sm font-bold inv-primary uppercase tracking-wide mb-2">Banking Information</div>
+                  <div className="mb-1.5"><span className="text-[10px] print-text-xs inv-muted block uppercase">Bank Name</span><span className="text-[11px] print-text-sm font-bold inv-primary block">STANDARD CHARTERED BANK (HK)</span></div>
+                  <div className="mb-1.5"><span className="text-[10px] print-text-xs inv-muted block uppercase">Account Name</span><span className="text-[11px] print-text-sm font-bold inv-primary block">YIMI INTERNATIONAL HOLDINGS LTD.</span></div>
+                  <div><span className="text-[10px] print-text-xs inv-muted block uppercase">Account No. (HKD)</span><span className="text-[13px] font-black inv-primary block">41510814091</span></div>
                 </div>
                 
-                <div className="flex-1 text-[9.5px] inv-muted text-justify leading-relaxed">
+                <div className="flex-1 text-[9.5px] print-text-xs inv-muted text-justify leading-relaxed">
                   <strong className="inv-primary inline-block mb-0.5 text-[10px]">【Terms & Conditions】</strong><br/>
                   <strong className="inv-primary">1. Content Liability:</strong> The Client warrants that they own or have obtained necessary rights to use all text/images provided to YIMI. YIMI holds no liability for copyright disputes arising from client-provided content.<br/>
                   <strong className="inv-primary">2. Intellectual Property:</strong> Upon full clearance of payment, the Client retains ownership of the website data and frontend visual output. YIMI retains all IP rights to the underlying system architecture and codebases.
                 </div>
               </div>
 
-              <div className="flex justify-between mt-[20px] print:mt-[15px] break-inside-avoid">
+              <div className="flex justify-between mt-[20px] print:mt-[10px] break-inside-avoid">
                 <div className="w-[42%]">
                   <div className="border-b border-[#0f172a] h-[35px] mb-1.5"></div>
-                  <div className="text-[10px] inv-muted">For and on behalf of<br/><strong className="inv-primary">YIMI GROUP</strong></div>
+                  <div className="text-[10px] print-text-xs inv-muted">For and on behalf of<br/><strong className="inv-primary">YIMI GROUP</strong></div>
                 </div>
                 <div className="w-[42%]">
                   <div className="border-b border-[#0f172a] h-[35px] mb-1.5"></div>
-                  <div className="text-[10px] inv-muted">Accepted and Agreed by<br/><strong className="inv-primary">{previewInvoice.client === '請輸入客戶名稱' ? '___________________' : previewInvoice.client}</strong></div>
+                  <div className="text-[10px] print-text-xs inv-muted">Accepted and Agreed by<br/><strong className="inv-primary">{previewInvoice.client === '請輸入客戶名稱' ? '___________________' : previewInvoice.client}</strong></div>
                 </div>
               </div>
 
