@@ -1,5 +1,5 @@
 'use client';
- 
+
 import React, { useState, useEffect } from 'react';
 import { 
   Lock, Cpu, Mail, Settings, LogOut, Activity, 
@@ -67,6 +67,9 @@ export default function AdminPage() {
   const [invTotal, setInvTotal] = useState(8000);
   const [invDiscountPct, setInvDiscountPct] = useState(20);
   const [invMaint, setInvMaint] = useState(2500);
+  
+  // 🌟 新增：控制單據狀態 (草稿/待處理/已結清)
+  const [invStatus, setInvStatus] = useState('草稿');
 
   // 🌟 動態分期付款狀態
   const defaultSinglePhase = [{ id: 1, name: 'Full Payment', desc: 'Payable upon project commencement and issuance of this document.', percent: 100 }];
@@ -81,6 +84,7 @@ export default function AdminPage() {
     setPreviewInvoice(record);
     setInvType(record.type);
     setInvTotal(record.amount);
+    setInvStatus(record.status || '待處理'); // 讀取現有狀態
     setInvDiscountPct(0); 
     setPaymentPhases(record.phases || defaultSinglePhase);
   };
@@ -93,6 +97,7 @@ export default function AdminPage() {
     };
     setPreviewInvoice(newRecord);
     setInvType('QUOTATION');
+    setInvStatus('草稿'); // 預設為草稿
     setInvTotal(0);
     setInvDiscountPct(0);
     setInvMaint(0);
@@ -101,7 +106,7 @@ export default function AdminPage() {
 
   const saveInvoiceToCRM = () => {
     const exists = crmRecords.find(r => r.id === previewInvoice.id);
-    const updatedRecord = { ...previewInvoice, amount: invTotal, type: invType, phases: paymentPhases };
+    const updatedRecord = { ...previewInvoice, amount: invTotal, type: invType, phases: paymentPhases, status: invStatus };
     if (exists) {
       setCrmRecords(crmRecords.map(r => r.id === previewInvoice.id ? updatedRecord : r));
     } else {
@@ -385,7 +390,7 @@ export default function AdminPage() {
                          <td className="px-6 py-4 text-slate-400">{record.date}</td>
                          <td className="px-6 py-4 font-mono font-medium">$ {record.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                          <td className="px-6 py-4">
-                           <span className={`px-2 py-1 rounded text-xs border ${record.status === '已結清' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                           <span className={`px-2 py-1 rounded text-xs border ${record.status === '已結清' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : record.status === '待處理' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>
                              {record.type} - {record.status}
                            </span>
                          </td>
@@ -469,7 +474,7 @@ export default function AdminPage() {
                <div className="flex justify-between items-end mb-8">
                  <div>
                    <h1 className="text-3xl font-bold text-white mb-2">業務諮詢名單管理</h1>
-                   <p className="text-slate-400">來自首頁「聯繫業務負責人」表單的潛在客戶詢問單。</p>
+                   <p className="text-slate-400">來自首頁「聯繫業務負責人」表單的潛客戶詢問單。</p>
                  </div>
                  <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-600">
                     匯出 CSV 名單
@@ -680,7 +685,22 @@ export default function AdminPage() {
             
             {/* 操作列 (列印時隱藏) */}
             <div className="flex justify-between items-center mb-6 print:hidden">
-              <div className="text-slate-700 flex gap-3">
+              <div className="text-slate-700 flex gap-3 items-center">
+                {/* 🌟 狀態切換選單 */}
+                <select 
+                  value={invStatus} 
+                  onChange={(e) => setInvStatus(e.target.value)} 
+                  className={`px-3 py-2.5 font-bold rounded-lg outline-none border cursor-pointer transition-colors ${
+                    invStatus === '已結清' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-500/30' :
+                    invStatus === '待處理' ? 'bg-amber-900/40 text-amber-400 border-amber-500/30' :
+                    'bg-slate-800 text-slate-300 border-slate-700'
+                  }`}
+                >
+                  <option value="草稿">📝 草稿狀態</option>
+                  <option value="待處理">⏳ 待處理 (已發送)</option>
+                  <option value="已結清">✅ 已結清 (已收款)</option>
+                </select>
+
                 <button onClick={saveInvoiceToCRM} className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold shadow-lg flex items-center transition-transform hover:-translate-y-0.5">
                   <Save size={18} className="mr-2"/> 儲存單據
                 </button>
@@ -704,7 +724,7 @@ export default function AdminPage() {
                 
                 @page { 
                   size: A4; 
-                  margin: 0mm; 
+                  margin: 0 !important; 
                 }
                 @media print { 
                   body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
@@ -712,11 +732,14 @@ export default function AdminPage() {
                   .print-a4-fix { 
                     width: 210mm !important; 
                     height: 297mm !important; 
+                    max-height: 297mm !important;
                     padding: 12mm 15mm !important; 
                     margin: 0 !important; 
+                    box-sizing: border-box !important;
                     box-shadow: none !important; 
                     overflow: hidden !important; 
                     page-break-after: avoid !important;
+                    page-break-inside: avoid !important;
                   }
                   .print-compact-mb { margin-bottom: 8px !important; }
                   .print-compact-p { padding: 4px 6px !important; }
@@ -823,7 +846,6 @@ export default function AdminPage() {
                 <tbody className="print-text-sm">
                   {paymentPhases.map((phase, index) => {
                     const isLast = index === paymentPhases.length - 1;
-                    // 安全計算：最後一期強制吸收剩餘金額，避免小數點 0.01 誤差
                     const prevSum = paymentPhases.slice(0, index).reduce((acc, p) => acc + safeFloat(invTotal * (p.percent / 100)), 0);
                     const amount = isLast ? safeFloat(invTotal - prevSum) : safeFloat(invTotal * (phase.percent / 100));
 
