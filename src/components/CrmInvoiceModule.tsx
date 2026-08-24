@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, FileText, X, Save, AlertTriangle, Trash2 } from 'lucide-react';
 
 export default function CrmInvoiceModule() {
   // ================= 1. CRM 與單據狀態 =================
-  const [crmRecords, setCrmRecords] = useState([
+  const defaultRecords = [
     { id: 'INV-20260823-01', client: 'TKP-DBPP', date: '2026-08-23', amount: 8000, type: 'QUOTATION', status: '待處理', discountPct: 20, maint: 2500, phases: [
       { id: 1, name: 'Phase 1', desc: 'Payable upon project commencement and issuance of this document.', percent: 60 },
       { id: 2, name: 'Phase 2', desc: 'Payable upon project completion and official launch.', percent: 40 }
@@ -13,8 +13,9 @@ export default function CrmInvoiceModule() {
     { id: 'INV-20260820-05', client: 'Global Trade Ltd.', date: '2026-08-20', amount: 15000, type: 'INVOICE', status: '已結清', discountPct: 0, maint: 3000, phases: [
       { id: 1, name: 'Full Payment', desc: 'Payable upon receipt.', percent: 100 }
     ]}
-  ]);
+  ];
 
+  const [crmRecords, setCrmRecords] = useState<any[]>(defaultRecords);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [invType, setInvType] = useState('QUOTATION');
   const [invTotal, setInvTotal] = useState(8000);
@@ -29,6 +30,18 @@ export default function CrmInvoiceModule() {
   const safeFloat = (num: number) => Math.round(num * 100) / 100;
   const originalAmount = invTotal > 0 ? safeFloat(invTotal / (1 - (invDiscountPct / 100))) : 0;
   const discountAmount = safeFloat(originalAmount - invTotal);
+
+  // 🌟 初始化：從 LocalStorage 讀取歷史單據，避免重整後消失
+  useEffect(() => {
+    const savedRecords = localStorage.getItem('yimi_crm_records');
+    if (savedRecords) {
+      try {
+        setCrmRecords(JSON.parse(savedRecords));
+      } catch (e) {
+        console.error('Failed to parse CRM records from local storage');
+      }
+    }
+  }, []);
 
   // ================= 2. 操作邏輯 =================
   const openInvoicePreview = (record: any) => {
@@ -54,7 +67,7 @@ export default function CrmInvoiceModule() {
     setPaymentPhases(defaultSinglePhase);
   };
 
-  // 自動化流程：儲存並判斷是否自動生成 Receipt
+  // 🌟 自動化流程：儲存並寫入 LocalStorage
   const saveInvoiceToCRM = () => {
     const exists = crmRecords.find(r => r.id === previewInvoice.id);
     const updatedRecord = { 
@@ -88,7 +101,9 @@ export default function CrmInvoiceModule() {
       alert("✅ 單據已成功儲存至系統！");
     }
 
+    // 更新 State 並同步寫入快取
     setCrmRecords(newRecords);
+    localStorage.setItem('yimi_crm_records', JSON.stringify(newRecords));
     setPreviewInvoice(null);
   };
 
@@ -97,7 +112,7 @@ export default function CrmInvoiceModule() {
   const updatePaymentPhase = (id: number, field: string, value: any) => { setPaymentPhases(paymentPhases.map(p => p.id === id ? { ...p, [field]: value } : p)); };
   const totalPercent = paymentPhases.reduce((acc, p) => acc + p.percent, 0);
 
-  // ================= 3. 專業列印引擎 =================
+  // ================= 3. 專業列印引擎 (修復自訂 PDF 檔名) =================
   const printUtil = (elementId: string) => {
     const originalElement = document.getElementById(elementId);
     if (!originalElement) return;
@@ -132,15 +147,18 @@ export default function CrmInvoiceModule() {
     const doc = iframe.contentWindow?.document;
     if (!doc) return;
 
-    // 🌟 動態生成 PDF 預設存檔名稱 (將空格替換為底線，確保檔案名稱安全)
+    // 🌟 動態生成 PDF 預設存檔名稱
     const safeClientName = previewInvoice?.client?.trim().replace(/\s+/g, '_') || 'Client';
     const pdfFileName = `${previewInvoice?.id || invType}_${safeClientName}`;
+
+    // 🌟 劫持主網頁標題，強迫瀏覽器抓取正確的 PDF 檔名
+    const originalTitle = document.title;
+    document.title = pdfFileName;
 
     doc.open();
     doc.write(`
       <html>
         <head>
-          <!-- 這裡的 title 就是 PDF 輸出的預設檔名 -->
           <title>${pdfFileName}</title>
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
@@ -156,11 +174,21 @@ export default function CrmInvoiceModule() {
         </head>
         <body>
           ${clonedElement.outerHTML}
-          <script>setTimeout(() => { window.print(); }, 800);</script>
         </body>
       </html>
     `);
     doc.close();
+
+    // 延遲執行，確保 Tailwind 渲染完成
+    setTimeout(() => { 
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print(); 
+      
+      // 列印框跳出後，還原主網頁標題
+      setTimeout(() => { document.title = originalTitle; }, 2000);
+    }, 800);
+
+    // 延遲清理 iframe
     setTimeout(() => { if(document.body.contains(iframe)) document.body.removeChild(iframe); }, 10000);
   };
 
