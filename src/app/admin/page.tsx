@@ -14,8 +14,8 @@ export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('capital');
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false); // 新增：控制 AI 生成時的 Loading 狀態
+  const [activeTab, setActiveTab] = useState('crm'); 
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false); 
 
   // ================= 2. 資金監控系統狀態 =================
   const [capitalConfig, setCapitalConfig] = useState({
@@ -53,7 +53,7 @@ export default function AdminPage() {
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [editingNews, setEditingNews] = useState({ id: 0, title: '', category: '行業洞察', date: '', summary: '', fullText: '', published: true });
 
-  // ================= 4. CRM 與單據開立系統狀態 (新增) =================
+  // ================= 4. CRM 與單據開立系統狀態 =================
   const [crmRecords, setCrmRecords] = useState([
     { id: 'INV-20260823-01', client: 'TKP-DBPP', date: '2026-08-23', amount: 8000, type: 'QUOTATION', status: '待處理' },
     { id: 'INV-20260820-05', client: 'Global Trade Ltd.', date: '2026-08-20', amount: 15000, type: 'INVOICE', status: '已結清' }
@@ -72,13 +72,47 @@ export default function AdminPage() {
   const phase1 = safeFloat(invTotal * 0.6);
   const phase2 = safeFloat(invTotal - phase1);
 
+  // 🌟 開啟現有單據預覽
   const openInvoicePreview = (record: any) => {
     setPreviewInvoice(record);
     setInvType(record.type);
     setInvTotal(record.amount);
+    setInvDiscountPct(0); // 重置為預設
   };
 
-  // 初始化：讀取本地緩存的智庫數據
+  // 🌟 新增空白客戶單據
+  const openAddInvoice = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const newId = `INV-${todayStr.replace(/-/g, '')}-${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
+    const newRecord = {
+      id: newId,
+      client: '請輸入客戶名稱',
+      date: todayStr,
+      amount: 0,
+      type: 'QUOTATION',
+      status: '草稿'
+    };
+    setPreviewInvoice(newRecord);
+    setInvType('QUOTATION');
+    setInvTotal(0);
+    setInvDiscountPct(0);
+    setInvMaint(0);
+  };
+
+  // 🌟 儲存當前單據到列表
+  const saveInvoiceToCRM = () => {
+    const exists = crmRecords.find(r => r.id === previewInvoice.id);
+    const updatedRecord = { ...previewInvoice, amount: invTotal, type: invType };
+    if (exists) {
+      setCrmRecords(crmRecords.map(r => r.id === previewInvoice.id ? updatedRecord : r));
+    } else {
+      setCrmRecords([updatedRecord, ...crmRecords]);
+    }
+    alert("✅ 單據已成功儲存至系統！");
+    setPreviewInvoice(null);
+  };
+
+  // ================= 初始化與存儲 =================
   useEffect(() => {
     const savedNews = localStorage.getItem('yimi_news_data');
     if (savedNews) {
@@ -86,7 +120,6 @@ export default function AdminPage() {
     }
   }, []);
 
-  // 保存數據並同步到本地緩存 (讓前台可以讀取)
   const syncNewsData = (updatedNews: any) => {
     setNewsArticles(updatedNews);
     localStorage.setItem('yimi_news_data', JSON.stringify(updatedNews));
@@ -104,21 +137,14 @@ export default function AdminPage() {
     setIsGeneratingAI(true);
     try {
       const systemPrompt = "你現在是蟻米集團的首席 AI 分析師。請結合今日全球宏觀經濟與大灣區動態，為高端客戶生成一篇關於「跨境資本流動」或「AI 產業趨勢」的深度洞察報告。語氣需要權威、數據驅動且符合國際投行標準。";
-
       const response = await fetch('/api/generateNews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: systemPrompt })
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "生成失敗");
-      }
-
+      if (!response.ok) { throw new Error(data.error || "生成失敗"); }
       const aiResult = JSON.parse(data.result);
-
       const newArticle = {
         id: Date.now(),
         title: aiResult.title || 'AI 生成標題失敗',
@@ -128,10 +154,8 @@ export default function AdminPage() {
         fullText: aiResult.fullText || '內文生成失敗',
         published: false
       };
-
       syncNewsData([newArticle, ...newsArticles]);
       alert('✅ 真實 AI 深度分析完成！已為您生成研報草稿。');
-
     } catch (error: any) {
       console.error(error);
       alert(`❌ AI 生成失敗，請確認 API Key 是否設定正確。錯誤訊息: ${error.message}`);
@@ -140,56 +164,24 @@ export default function AdminPage() {
     }
   };
 
-  const openAddNews = () => {
-    setEditingNews({ id: 0, title: '', category: '行業洞察', date: new Date().toISOString().split('T')[0], summary: '', fullText: '', published: true });
-    setShowNewsModal(true);
-  };
-
-  const openEditNews = (news: any) => {
-    setEditingNews(news);
-    setShowNewsModal(true);
-  };
-
+  const openAddNews = () => { setEditingNews({ id: 0, title: '', category: '行業洞察', date: new Date().toISOString().split('T')[0], summary: '', fullText: '', published: true }); setShowNewsModal(true); };
+  const openEditNews = (news: any) => { setEditingNews(news); setShowNewsModal(true); };
   const saveNews = () => {
-    if (editingNews.id === 0) {
-      syncNewsData([{ ...editingNews, id: Date.now() }, ...newsArticles]);
-    } else {
-      syncNewsData(newsArticles.map(a => a.id === editingNews.id ? editingNews : a));
-    }
+    if (editingNews.id === 0) { syncNewsData([{ ...editingNews, id: Date.now() }, ...newsArticles]); } 
+    else { syncNewsData(newsArticles.map(a => a.id === editingNews.id ? editingNews : a)); }
     setShowNewsModal(false);
   };
-
-  const deleteNews = (id: number) => {
-    if (window.confirm("確定刪除這篇文章？前台也將同步移除。")) {
-      syncNewsData(newsArticles.filter(a => a.id !== id));
-    }
-  };
+  const deleteNews = (id: number) => { if (window.confirm("確定刪除這篇文章？前台也將同步移除。")) { syncNewsData(newsArticles.filter(a => a.id !== id)); } };
 
   // --- 專案 CRUD 邏輯 ---
-  const openAddProject = () => {
-    setEditingProject({ id: 0, name: '', region: '本地/香港', allocated: 0, monthsActive: 1, roi: 0, status: '建倉期預警' });
-    setShowProjectModal(true);
-  };
-
-  const openEditProject = (project: any) => {
-    setEditingProject(project);
-    setShowProjectModal(true);
-  };
-
+  const openAddProject = () => { setEditingProject({ id: 0, name: '', region: '本地/香港', allocated: 0, monthsActive: 1, roi: 0, status: '建倉期預警' }); setShowProjectModal(true); };
+  const openEditProject = (project: any) => { setEditingProject(project); setShowProjectModal(true); };
   const saveProject = () => {
-    if (editingProject.id === 0) {
-      setProjects([...projects, { ...editingProject, id: Date.now() }]);
-    } else {
-      setProjects(projects.map(p => p.id === editingProject.id ? editingProject : p));
-    }
+    if (editingProject.id === 0) { setProjects([...projects, { ...editingProject, id: Date.now() }]); } 
+    else { setProjects(projects.map(p => p.id === editingProject.id ? editingProject : p)); }
     setShowProjectModal(false);
   };
-
-  const deleteProject = (id: number) => {
-    if (window.confirm("確定要刪除這個監控項目嗎？")) {
-      setProjects(projects.filter(p => p.id !== id));
-    }
-  };
+  const deleteProject = (id: number) => { if (window.confirm("確定要刪除這個監控項目嗎？")) { setProjects(projects.filter(p => p.id !== id)); } };
 
   // ================= 登入畫面 =================
   if (!isLoggedIn) {
@@ -214,7 +206,6 @@ export default function AdminPage() {
   // ================= 主系統畫面 =================
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans">
-      {/* 導覽列：列印時隱藏 */}
       <nav className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center z-40 relative shadow-md print:hidden">
         <div className="font-bold text-xl text-white flex items-center gap-3">
           <div className="p-2 bg-blue-600/20 rounded-lg"><Cpu className="text-blue-500" size={20} /></div>YIMI Admin
@@ -222,14 +213,13 @@ export default function AdminPage() {
         <button onClick={() => setIsLoggedIn(false)} className="flex items-center text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors"><LogOut size={16} className="mr-2" /> 登出系統</button>
       </nav>
 
-      {/* 主體區塊：列印時隱藏，讓 Modal 獨佔列印版面 */}
       <div className="flex flex-1 overflow-hidden print:hidden">
         {/* 左側選單 */}
         <aside className="w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-2 overflow-y-auto">
           {[
             { id: 'dashboard', icon: <Activity size={18}/>, label: '系統總覽' },
             { id: 'capital', icon: <PieChart size={18}/>, label: '資金監控系統' },
-            { id: 'crm', icon: <Briefcase size={18}/>, label: '客戶 CRM & 財務開單' }, // 新增的 CRM 選單
+            { id: 'crm', icon: <Briefcase size={18}/>, label: '客戶 CRM & 財務開單' },
             { id: 'news', icon: <FileText size={18}/>, label: 'AI 智庫管理' },
             { id: 'leads', icon: <Mail size={18}/>, label: '業務諮詢名單' },
             { id: 'settings', icon: <Settings size={18}/>, label: '系統設定' }
@@ -368,7 +358,8 @@ export default function AdminPage() {
                    <h1 className="text-3xl font-bold text-white mb-2">客戶 CRM & 財務單據系統</h1>
                    <p className="text-slate-400">管理客戶資料、歷史訂單，並自動產生 PDF 報價單與發票。</p>
                  </div>
-                 <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center">
+                 {/* 🌟 修復 1：綁定 openAddInvoice 事件，點擊即可新增空白單據 */}
+                 <button onClick={openAddInvoice} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center">
                    <Plus size={16} className="mr-1"/> 新增客戶單據
                  </button>
                </div>
@@ -391,7 +382,7 @@ export default function AdminPage() {
                          <td className="px-6 py-4 font-mono text-blue-400">{record.id}</td>
                          <td className="px-6 py-4 font-bold text-white">{record.client}</td>
                          <td className="px-6 py-4 text-slate-400">{record.date}</td>
-                         <td className="px-6 py-4 font-mono font-medium">$ {record.amount.toLocaleString()}</td>
+                         <td className="px-6 py-4 font-mono font-medium">$ {record.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                          <td className="px-6 py-4">
                            <span className={`px-2 py-1 rounded text-xs border ${record.status === '已結清' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
                              {record.type} - {record.status}
@@ -399,7 +390,7 @@ export default function AdminPage() {
                          </td>
                          <td className="px-6 py-4 text-right">
                            <button onClick={() => openInvoicePreview(record)} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-md transition-colors text-xs flex items-center justify-end ml-auto border border-slate-600">
-                             <FileText size={12} className="mr-1"/> 預覽 / 列印單據
+                             <FileText size={12} className="mr-1"/> 預覽 / 編輯
                            </button>
                          </td>
                        </tr>
@@ -650,7 +641,7 @@ export default function AdminPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-1">分類</label>
                   <select value={editingNews.category} onChange={(e) => setEditingNews({...editingNews, category: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white outline-none focus:border-blue-500">
-                    <option value="實時研報">實時研報</option>
+                    <option value="實時研研報">實時研報</option>
                     <option value="政策解讀">政策解讀</option>
                     <option value="行業洞察">行業洞察</option>
                     <option value="市場預警">市場預警</option>
@@ -683,7 +674,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ================= CRM 單據預覽 / 列印彈窗 (Invoice Modal) (新增) ================= */}
+      {/* ================= CRM 單據預覽 / 列印彈窗 (Invoice Modal) ================= */}
       {previewInvoice && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 print:p-0 print:static print:z-auto print:flex-none print:block bg-slate-950/80 backdrop-blur-sm print:bg-white print:backdrop-blur-none">
           
@@ -691,11 +682,13 @@ export default function AdminPage() {
             
             {/* 操作列 (列印時隱藏) */}
             <div className="flex justify-between items-center mb-6 print:hidden">
-              <div className="text-slate-700">
+              <div className="text-slate-700 flex gap-3">
+                <button onClick={saveInvoiceToCRM} className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold shadow-lg flex items-center transition-transform hover:-translate-y-0.5">
+                  <Save size={18} className="mr-2"/> 儲存單據
+                </button>
                 <button onClick={() => window.print()} className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold shadow-lg flex items-center transition-transform hover:-translate-y-0.5">
                   🖨️ 匯出 PDF / 列印
                 </button>
-                <p className="text-xs text-slate-500 mt-2">提示：列印時請將「邊界」設為「無」，系統會自動隱藏後台選單。</p>
               </div>
               <button onClick={() => setPreviewInvoice(null)} className="p-2 bg-slate-400 hover:bg-slate-500 rounded-full text-white transition-colors"><X size={24}/></button>
             </div>
@@ -708,7 +701,7 @@ export default function AdminPage() {
                 .inv-secondary { color: #3b82f6; }
                 .inv-muted { color: #64748b; }
                 .inv-bg { background-color: #f8fafc; }
-                .inv-input { display: inline-block; padding: 2px 4px; background-color: #dbeafe; border-radius: 4px; color: #3b82f6; font-weight: 900; outline: none; text-align: right; border: none; }
+                .inv-input { display: inline-block; padding: 2px 4px; background-color: #dbeafe; border-radius: 4px; color: #3b82f6; font-weight: 900; outline: none; border: none; }
                 .inv-input:focus { background-color: #bfdbfe; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
                 @media print { 
                   .inv-input { background-color: transparent; padding: 0; color: inherit; } 
@@ -721,13 +714,17 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {/* 🌟 抬頭與 LOGO 更新區塊 */}
               <header className="flex justify-between items-start border-b-2 border-[#0f172a] pb-3 mb-[15px] relative z-20 print:mb-[10px] print:pb-2">
                 <div className="w-[55%]">
-                  <div className="text-[18px] font-black inv-primary tracking-wide mb-1.5">YIMI INTERNATIONAL HOLDINGS LIMITED</div>
+                  <div className="flex items-center gap-3 mb-2">
+                     <div className="w-10 h-10 bg-[#0f172a] rounded-lg flex items-center justify-center text-white font-black text-xl">Y</div>
+                     <div className="text-[20px] font-black inv-primary tracking-wider">YIMI GROUP</div>
+                  </div>
                   <div className="text-[11px] inv-muted leading-relaxed">
                     RM11, 22/F, TOWER B, NEW TRADE PLAZA<br/>
                     6 ON PING STREET, SHA TIN, N.T., HONG KONG<br/>
-                    Tel: (+852) 3996 9796
+                    Tel: (+852) 3996 9796 | Email: info@yimihk.com
                   </div>
                 </div>
                 <div className="w-[40%] text-right">
@@ -736,13 +733,13 @@ export default function AdminPage() {
                     <option value="INVOICE">INVOICE</option>
                     <option value="RECEIPT">RECEIPT</option>
                   </select>
-                  <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[11px]">
+                  <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[11px] items-center justify-end text-right">
                     <span className="font-bold inv-muted">Date:</span>
-                    <span className="font-bold inv-primary">{previewInvoice.date}</span>
+                    <input type="date" value={previewInvoice.date} onChange={(e)=>setPreviewInvoice({...previewInvoice, date: e.target.value})} className="font-bold inv-primary bg-transparent border-none outline-none text-right hover:bg-slate-100 cursor-pointer" />
                     <span className="font-bold inv-muted">Ref No:</span>
                     <span className="font-bold inv-primary">{previewInvoice.id}</span>
-                    <span className="font-bold inv-muted">Bill To:</span>
-                    <span className="font-bold inv-primary">{previewInvoice.client}</span>
+                    <span className="font-bold inv-muted pt-1">Bill To:</span>
+                    <input type="text" value={previewInvoice.client} onChange={(e)=>setPreviewInvoice({...previewInvoice, client: e.target.value})} className="font-bold inv-primary bg-transparent border-none outline-none text-right hover:bg-slate-100 w-full" placeholder="輸入客戶名稱..." />
                   </div>
                 </div>
               </header>
@@ -767,7 +764,7 @@ export default function AdminPage() {
                         </div>
                         <div className="flex justify-between font-extrabold inv-secondary">
                           <span>Partnership Discount (
-                            <input type="number" value={invDiscountPct} onChange={(e) => setInvDiscountPct(Number(e.target.value))} className="inv-input w-[40px] text-center mx-1"/>% OFF):
+                            <input type="number" value={invDiscountPct} onChange={(e) => setInvDiscountPct(Number(e.target.value))} className="inv-input text-right w-[40px] text-center mx-1"/>% OFF):
                           </span>
                           <span>- $ {discountAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                         </div>
@@ -854,11 +851,11 @@ export default function AdminPage() {
               <div className="flex justify-between mt-[20px] print:mt-[15px] break-inside-avoid">
                 <div className="w-[42%]">
                   <div className="border-b border-[#0f172a] h-[35px] mb-1.5"></div>
-                  <div className="text-[10px] inv-muted">For and on behalf of<br/><strong className="inv-primary">YIMI INTERNATIONAL HOLDINGS LIMITED</strong></div>
+                  <div className="text-[10px] inv-muted">For and on behalf of<br/><strong className="inv-primary">YIMI GROUP</strong></div>
                 </div>
                 <div className="w-[42%]">
                   <div className="border-b border-[#0f172a] h-[35px] mb-1.5"></div>
-                  <div className="text-[10px] inv-muted">Accepted and Agreed by<br/><strong className="inv-primary">{previewInvoice.client}</strong></div>
+                  <div className="text-[10px] inv-muted">Accepted and Agreed by<br/><strong className="inv-primary">{previewInvoice.client === '請輸入客戶名稱' ? '___________________' : previewInvoice.client}</strong></div>
                 </div>
               </div>
 
