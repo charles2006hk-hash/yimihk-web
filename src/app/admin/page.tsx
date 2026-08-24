@@ -5,7 +5,7 @@ import {
   Lock, Cpu, Mail, Settings, LogOut, Activity, 
   PieChart, TrendingUp, DollarSign, Briefcase, Calendar, 
   MapPin, AlertCircle, Building2, User, Save, Key, Bell, 
-  ShieldCheck, Plus, FileText, UploadCloud, Edit3, Trash2, X, CheckCircle
+  ShieldCheck, Plus, FileText, UploadCloud, Edit3, Trash2, X, CheckCircle, AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -55,7 +55,10 @@ export default function AdminPage() {
 
   // ================= 4. CRM 與單據開立系統狀態 =================
   const [crmRecords, setCrmRecords] = useState([
-    { id: 'INV-20260823-01', client: 'TKP-DBPP', date: '2026-08-23', amount: 8000, type: 'QUOTATION', status: '待處理' },
+    { id: 'INV-20260823-01', client: 'TKP-DBPP', date: '2026-08-23', amount: 8000, type: 'QUOTATION', status: '待處理', phases: [
+      { id: 1, name: 'Phase 1', desc: 'Payable upon project commencement and issuance of this document.', percent: 60 },
+      { id: 2, name: 'Phase 2', desc: 'Payable upon project completion and official launch.', percent: 40 }
+    ]},
     { id: 'INV-20260820-05', client: 'Global Trade Ltd.', date: '2026-08-20', amount: 15000, type: 'INVOICE', status: '已結清' }
   ]);
 
@@ -65,41 +68,40 @@ export default function AdminPage() {
   const [invDiscountPct, setInvDiscountPct] = useState(20);
   const [invMaint, setInvMaint] = useState(2500);
 
+  // 🌟 動態分期付款狀態
+  const defaultSinglePhase = [{ id: 1, name: 'Full Payment', desc: 'Payable upon project commencement and issuance of this document.', percent: 100 }];
+  const [paymentPhases, setPaymentPhases] = useState(defaultSinglePhase);
+
   // 處理浮點數精度計算 (Financial Safety)
   const safeFloat = (num: number) => Math.round(num * 100) / 100;
   const originalAmount = invTotal > 0 ? safeFloat(invTotal / (1 - (invDiscountPct / 100))) : 0;
   const discountAmount = safeFloat(originalAmount - invTotal);
-  const phase1 = safeFloat(invTotal * 0.6);
-  const phase2 = safeFloat(invTotal - phase1);
 
   const openInvoicePreview = (record: any) => {
     setPreviewInvoice(record);
     setInvType(record.type);
     setInvTotal(record.amount);
     setInvDiscountPct(0); 
+    setPaymentPhases(record.phases || defaultSinglePhase);
   };
 
   const openAddInvoice = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const newId = `INV-${todayStr.replace(/-/g, '')}-${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
     const newRecord = {
-      id: newId,
-      client: '請輸入客戶名稱',
-      date: todayStr,
-      amount: 0,
-      type: 'QUOTATION',
-      status: '草稿'
+      id: newId, client: '請輸入客戶名稱', date: todayStr, amount: 0, type: 'QUOTATION', status: '草稿', phases: defaultSinglePhase
     };
     setPreviewInvoice(newRecord);
     setInvType('QUOTATION');
     setInvTotal(0);
     setInvDiscountPct(0);
     setInvMaint(0);
+    setPaymentPhases(defaultSinglePhase);
   };
 
   const saveInvoiceToCRM = () => {
     const exists = crmRecords.find(r => r.id === previewInvoice.id);
-    const updatedRecord = { ...previewInvoice, amount: invTotal, type: invType };
+    const updatedRecord = { ...previewInvoice, amount: invTotal, type: invType, phases: paymentPhases };
     if (exists) {
       setCrmRecords(crmRecords.map(r => r.id === previewInvoice.id ? updatedRecord : r));
     } else {
@@ -108,6 +110,22 @@ export default function AdminPage() {
     alert("✅ 單據已成功儲存至系統！");
     setPreviewInvoice(null);
   };
+
+  // --- 分期付款操作邏輯 ---
+  const addPaymentPhase = () => {
+    setPaymentPhases([...paymentPhases, { 
+      id: Date.now(), name: `Phase ${paymentPhases.length + 1}`, desc: 'Enter phase details here...', percent: 0 
+    }]);
+  };
+  const removePaymentPhase = (id: number) => {
+    if (paymentPhases.length <= 1) return;
+    setPaymentPhases(paymentPhases.filter(p => p.id !== id));
+  };
+  const updatePaymentPhase = (id: number, field: string, value: any) => {
+    setPaymentPhases(paymentPhases.map(p => p.id === id ? { ...p, [field]: value } : p));
+  };
+
+  const totalPercent = paymentPhases.reduce((acc, p) => acc + p.percent, 0);
 
   // ================= 初始化與存儲 =================
   useEffect(() => {
@@ -133,22 +151,13 @@ export default function AdminPage() {
     setIsGeneratingAI(true);
     try {
       const systemPrompt = "你現在是蟻米集團的首席 AI 分析師。請結合今日全球宏觀經濟與大灣區動態，為高端客戶生成一篇關於「跨境資本流動」或「AI 產業趨勢」的深度洞察報告。語氣需要權威、數據驅動且符合國際投行標準。";
-      const response = await fetch('/api/generateNews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: systemPrompt })
-      });
+      const response = await fetch('/api/generateNews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: systemPrompt }) });
       const data = await response.json();
       if (!response.ok) { throw new Error(data.error || "生成失敗"); }
       const aiResult = JSON.parse(data.result);
       const newArticle = {
-        id: Date.now(),
-        title: aiResult.title || 'AI 生成標題失敗',
-        category: aiResult.category || '實時研報',
-        date: new Date().toISOString().split('T')[0],
-        summary: aiResult.summary || '摘要生成失敗',
-        fullText: aiResult.fullText || '內文生成失敗',
-        published: false
+        id: Date.now(), title: aiResult.title || 'AI 生成標題失敗', category: aiResult.category || '實時研報',
+        date: new Date().toISOString().split('T')[0], summary: aiResult.summary || '摘要生成失敗', fullText: aiResult.fullText || '內文生成失敗', published: false
       };
       syncNewsData([newArticle, ...newsArticles]);
       alert('✅ 真實 AI 深度分析完成！已為您生成研報草稿。');
@@ -800,27 +809,61 @@ export default function AdminPage() {
                 </tbody>
               </table>
 
-              <div className="text-[11px] print-text-sm font-bold inv-primary uppercase tracking-wide m-[12px_0_6px_0] pb-1 border-b border-[#e2e8f0] print-compact-mb">Payment Schedule</div>
-              <table className="w-full border-collapse mb-[15px] print-compact-mb">
+              {/* 🌟 動態 Payment Schedule 區塊 */}
+              <div className="flex justify-between items-end m-[12px_0_6px_0] print:m-[10px_0_4px_0] pb-1 border-b border-[#e2e8f0]">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] print-text-sm font-bold inv-primary uppercase tracking-wide">Payment Schedule</span>
+                  {totalPercent !== 100 && (
+                    <span className="text-[10px] text-red-500 font-bold flex items-center print:hidden"><AlertTriangle size={10} className="mr-1"/> 總和不等於 100% (當前: {totalPercent}%)</span>
+                  )}
+                </div>
+                <button onClick={addPaymentPhase} className="print:hidden text-[10px] text-blue-600 hover:text-blue-700 font-bold flex items-center bg-blue-50 px-2 py-0.5 rounded transition-colors"><Plus size={12} className="mr-0.5"/>新增期數</button>
+              </div>
+              <table className="w-full border-collapse mb-[15px] print:mb-2">
                 <tbody className="print-text-sm">
-                  <tr>
-                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top">
-                      <span className="text-[13px] print-text-sm font-bold inv-primary mb-1 block">Phase 1 (60%)</span>
-                      <span className="inv-muted text-[11px] print-text-xs">Payable upon project commencement and issuance of this document.</span>
-                    </td>
-                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] font-bold text-right w-[140px]">
-                      <span className="inv-muted mr-1">$</span>{phase1.toLocaleString('en-US', {minimumFractionDigits: 2})}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top">
-                      <span className="text-[13px] print-text-sm font-bold inv-primary mb-1 block">Phase 2 (40%)</span>
-                      <span className="inv-muted text-[11px] print-text-xs">Payable upon project completion, data entry fulfillment, and official launch.</span>
-                    </td>
-                    <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] font-bold text-right w-[140px]">
-                      <span className="inv-muted mr-1">$</span>{phase2.toLocaleString('en-US', {minimumFractionDigits: 2})}
-                    </td>
-                  </tr>
+                  {paymentPhases.map((phase, index) => {
+                    const isLast = index === paymentPhases.length - 1;
+                    // 安全計算：最後一期強制吸收剩餘金額，避免小數點 0.01 誤差
+                    const prevSum = paymentPhases.slice(0, index).reduce((acc, p) => acc + safeFloat(invTotal * (p.percent / 100)), 0);
+                    const amount = isLast ? safeFloat(invTotal - prevSum) : safeFloat(invTotal * (phase.percent / 100));
+
+                    return (
+                      <tr key={phase.id} className="group">
+                        <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] align-top relative">
+                          {paymentPhases.length > 1 && (
+                            <button onClick={() => removePaymentPhase(phase.id)} className="absolute -left-6 top-3 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 print:hidden transition-opacity">
+                              <Trash2 size={14}/>
+                            </button>
+                          )}
+                          <div className="flex items-center mb-1">
+                            <input 
+                              type="text" 
+                              value={phase.name} 
+                              onChange={(e) => updatePaymentPhase(phase.id, 'name', e.target.value)} 
+                              className="text-[13px] print-text-sm font-bold inv-primary bg-transparent outline-none border-b border-transparent hover:border-slate-300 focus:border-blue-500 w-auto min-w-[80px]" 
+                            />
+                            <span className="text-[13px] font-bold inv-primary mx-1">(</span>
+                            <input 
+                              type="number" 
+                              value={phase.percent} 
+                              onChange={(e) => updatePaymentPhase(phase.id, 'percent', Number(e.target.value))} 
+                              className="inv-input text-center w-[40px] text-[13px] font-bold" 
+                            />
+                            <span className="text-[13px] font-bold inv-primary">%)</span>
+                          </div>
+                          <textarea 
+                            value={phase.desc} 
+                            onChange={(e) => updatePaymentPhase(phase.id, 'desc', e.target.value)} 
+                            className="inv-muted text-[11px] print-text-xs bg-transparent outline-none w-full resize-none overflow-hidden" 
+                            rows={2} 
+                          />
+                        </td>
+                        <td className="p-[10px] print-compact-p border-b border-[#e2e8f0] font-bold text-right w-[140px] align-top pt-[14px]">
+                          <span className="inv-muted mr-1">$</span>{amount.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 
@@ -856,7 +899,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* 🌟 加大簽名區間高度：h-[65px] 並增加了 print:mt-[20px] */}
               <div className="flex justify-between mt-[30px] print:mt-[20px] break-inside-avoid">
                 <div className="w-[42%]">
                   <div className="border-b border-[#0f172a] h-[65px] mb-2"></div>
