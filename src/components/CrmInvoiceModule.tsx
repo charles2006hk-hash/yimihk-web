@@ -54,7 +54,7 @@ export default function CrmInvoiceModule() {
     setPaymentPhases(defaultSinglePhase);
   };
 
-  // 🌟 自動化流程：儲存並判斷是否自動生成 Receipt
+  // 自動化流程：儲存並判斷是否自動生成 Receipt
   const saveInvoiceToCRM = () => {
     const exists = crmRecords.find(r => r.id === previewInvoice.id);
     const updatedRecord = { 
@@ -70,7 +70,6 @@ export default function CrmInvoiceModule() {
       newRecords = [updatedRecord, ...newRecords];
     }
 
-    // 💡 核心邏輯：如果儲存的是 INVOICE 且狀態改為「已結清」，自動產生一筆 RECEIPT
     if (invType === 'INVOICE' && invStatus === '已結清') {
       const receiptId = updatedRecord.id.includes('INV-') 
         ? updatedRecord.id.replace('INV-', 'REC-') 
@@ -80,7 +79,7 @@ export default function CrmInvoiceModule() {
       
       if (!receiptExists) {
         const newReceipt = { ...updatedRecord, id: receiptId, type: 'RECEIPT', status: '已結清' };
-        newRecords = [newReceipt, ...newRecords]; // 將新的 Receipt 加入列表最上方
+        newRecords = [newReceipt, ...newRecords]; 
         alert("✅ 單據已儲存，系統已為您自動產生對應的 RECEIPT 收據！");
       } else {
         alert("✅ 單據已成功儲存至系統！");
@@ -133,11 +132,16 @@ export default function CrmInvoiceModule() {
     const doc = iframe.contentWindow?.document;
     if (!doc) return;
 
+    // 🌟 動態生成 PDF 預設存檔名稱 (將空格替換為底線，確保檔案名稱安全)
+    const safeClientName = previewInvoice?.client?.trim().replace(/\s+/g, '_') || 'Client';
+    const pdfFileName = `${previewInvoice?.id || invType}_${safeClientName}`;
+
     doc.open();
     doc.write(`
       <html>
         <head>
-          <title>YIMI_${invType}_${previewInvoice?.id || 'Doc'}</title>
+          <!-- 這裡的 title 就是 PDF 輸出的預設檔名 -->
+          <title>${pdfFileName}</title>
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
             @page { size: A4; margin: 0; }
