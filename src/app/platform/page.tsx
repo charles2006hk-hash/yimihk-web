@@ -9,12 +9,36 @@ export default function PlatformShowcase() {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // 模擬數據：AIGC 短劇與電影
+  // 模擬數據：AIGC 短劇與電影 (已修復第一張失效的圖片連結)
   const trendingContent = [
-    { id: 1, title: '賽博長安 (Cyber ChangAn)', category: 'AIGC 短劇', match: '98% Match', img: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=800&auto=format&fit=crop' },
-    { id: 2, title: '神經網絡 (Neural Net)', category: 'AI 科幻電影', match: '95% Match', img: 'https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?q=80&w=800&auto=format&fit=crop' },
-    { id: 3, title: '量子戀人 (Quantum Love)', category: '互動影視', match: '92% Match', img: 'https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=800&auto=format&fit=crop' },
-    { id: 4, title: '深淵代碼 (Abyss Code)', category: 'AIGC 懸疑', match: '99% Match', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop' },
+    { 
+      id: 1, 
+      title: '賽博長安 (Cyber ChangAn)', 
+      category: 'AIGC 短劇', 
+      match: '98% Match', 
+      img: 'https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=800&auto=format&fit=crop' // ⬅️ 已更換為穩定的霓虹/科幻城市圖源
+    },
+    { 
+      id: 2, 
+      title: '神經網絡 (Neural Net)', 
+      category: 'AI 科幻電影', 
+      match: '95% Match', 
+      img: 'https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?q=80&w=800&auto=format&fit=crop' 
+    },
+    { 
+      id: 3, 
+      title: '量子戀人 (Quantum Love)', 
+      category: '互動影視', 
+      match: '92% Match', 
+      img: 'https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=800&auto=format&fit=crop' 
+    },
+    { 
+      id: 4, 
+      title: '深淵代碼 (Abyss Code)', 
+      category: 'AIGC 懸疑', 
+      match: '99% Match', 
+      img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop' 
+    },
   ];
 
   // 處理等候名單表單提交
