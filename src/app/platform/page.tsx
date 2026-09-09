@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Play, Info, Crown, Sparkles, Film, ArrowLeft, CheckCircle2, ChevronRight } from 'lucide-react';
+// 🌟 這裡補上了 X 圖標的引入
+import { Play, Info, Crown, Sparkles, Film, ArrowLeft, CheckCircle2, ChevronRight, X } from 'lucide-react';
 
 export default function PlatformShowcase() {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
