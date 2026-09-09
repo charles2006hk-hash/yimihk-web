@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   ArrowRight, Globe, Cpu, Blocks, Building2, BarChart3, 
   Shield, Target, Zap, ShieldCheck, Users, BarChart, X, Send, CheckCircle2, 
-  Sparkles, Clapperboard, MonitorPlay, Layers 
+  Sparkles, Clapperboard, MonitorPlay, Layers, Newspaper, ExternalLink 
 } from 'lucide-react';
 import NewsWidget from '@/components/NewsWidget';
 import MarketTicker from '@/components/MarketTicker';
@@ -17,7 +17,7 @@ const servicesData = [
     icon: <Clapperboard className="text-purple-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
     title: 'AIGC 數字內容與傳媒',
     shortDesc: '專注於網絡短劇、AI 電影及創新數字媒體內容的策劃、製作與發行，打造泛娛樂 IP。',
-    deepImage: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop', // 替換為科技娛樂感圖片
+    deepImage: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop',
     deepTitle: '引領下一代生成式數字娛樂',
     deepPoints: [
       { icon: <MonitorPlay size={18}/>, title: 'AI 影視策劃與發行', desc: '從劇本生成、虛擬角色塑造到後期渲染，全面引入 AI 輔助，大幅縮短網絡短劇與 AI 電影的製作週期並降低成本。' },
@@ -30,7 +30,7 @@ const servicesData = [
     icon: <MonitorPlay className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
     title: 'YIMI 數字與訂閱平台',
     shortDesc: '獨立運營的線上訂閱與分發生態。直接向企業與消費者提供專屬數字產品與技術服務。',
-    deepImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop', // 替換為平台螢幕感圖片
+    deepImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop',
     deepTitle: '構建企業與個人的專屬 SaaS 生態',
     deepPoints: [
       { icon: <Users size={18}/>, title: 'B2C 數字內容訂閱', desc: '為 C 端用戶提供無縫的線上觀影、短劇解鎖及高級會員專屬的數字資產體驗。' },
@@ -43,7 +43,7 @@ const servicesData = [
     icon: <BrainCircuit size={44} className="text-emerald-500 mb-6 group-hover:scale-110 transition-transform" />,
     title: 'AI 核心科技研發',
     shortDesc: '以尖端人工智能算法為基石，提供企業級的智能解決方案與大數據深度分析。',
-    deepImage: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1000&auto=format&fit=crop', // 替換為運算晶片感圖片
+    deepImage: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1000&auto=format&fit=crop',
     deepTitle: '數據驅動的工業與商業大腦',
     deepPoints: [
       { icon: <BarChart size={18}/>, title: '企業級智能優化', desc: '深入企業核心流程，利用 AI 模型進行大數據過濾、預測性維護與供應鏈優化，大幅提升營運效率。' },
@@ -56,7 +56,7 @@ const servicesData = [
     icon: <Layers className="text-amber-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
     title: '區塊鏈與智慧商業',
     shortDesc: '融合區塊鏈重塑消費場景信任機制，結合實體資本發展跨境商業與智慧地產項目。',
-    deepImage: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1000&auto=format&fit=crop', // 智慧城市圖片
+    deepImage: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1000&auto=format&fit=crop',
     deepTitle: '虛實融合 (Phygital) 的未來場景',
     deepPoints: [
       { icon: <Globe size={18}/>, title: '跨境資本與大宗貿易', desc: '深度配合區域金融政策，為大型企業提供合規的資金調撥方案與跨國大宗商品買賣樞紐服務。' },
@@ -66,7 +66,7 @@ const servicesData = [
   }
 ];
 
-// 用戶手動引入圖標 (因為上方未引入 BrainCircuit)
+// 用戶手動引入圖標 
 import { BrainCircuit } from 'lucide-react';
 
 const btn1DeepResearch = `由集團 AI 引擎即時分析全球政策導向、金融波動及行業深度動態。我們的 AI 模型不僅分析 Market Ticker 等每日開盤數據，更能針對國際政治、大宗商品期貨、智慧地產園區管理等特定領域，生成具有國際投行水準的深度研究報告與決策建議，為跨境資本開拓新的增長極。`;
@@ -107,13 +107,10 @@ export default function Home() {
 
       {/* ================= 1. 全新科技感首屏 (Hero Section) ================= */}
       <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32 border-b border-slate-900">
-        {/* 背景光暈特效 (AIGC 氛圍) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
         <div className="absolute top-1/4 right-0 w-[600px] h-[400px] bg-purple-600/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
 
         <div className="container mx-auto px-6 relative z-10 text-center">
-          
-          {/* Logo 處理 (維持銀白色高質感) */}
           <div className="flex justify-center mb-8 relative">
             <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full w-32 h-32 mx-auto -z-10"></div>
             <img 
@@ -139,13 +136,48 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-20">
-            {/* 💡 主要引導按鈕：前往訂閱平台 */}
             <Link href="/platform" className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2">
-  <Globe size={18} /> 前往 ReelStory 數字訂閱平台
-</Link>
+              <Globe size={18} /> 前往 ReelStory 數字訂閱平台
+            </Link>
             <button onClick={() => document.getElementById('ecosystem')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all border border-slate-700 flex items-center justify-center gap-2">
               探索核心業務矩陣 <ArrowRight size={18} />
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= 新增：權威媒體報導 (Featured Press) ================= */}
+      <section className="py-12 bg-slate-950 border-b border-slate-900 relative z-20 overflow-hidden">
+        {/* 微弱的紫光點綴 */}
+        <div className="absolute right-0 bottom-0 w-[400px] h-[200px] bg-purple-600/10 blur-[80px] rounded-full pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-900/80 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-slate-800 shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all hover:border-slate-700">
+            <div className="flex items-center gap-6">
+              <div className="hidden md:flex w-16 h-16 bg-blue-900/30 rounded-2xl items-center justify-center text-blue-400 shrink-0 border border-blue-500/20">
+                <Newspaper size={32} />
+              </div>
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-md tracking-widest">媒體焦點</span>
+                  <span className="text-slate-400 text-sm font-medium">南方都市報 深度報導</span>
+                </div>
+                <h3 className="text-lg md:text-xl font-bold text-white mb-2 leading-snug">
+                  蟻米集團戰略升級：以 AI 核心重塑數字內容與商業生態
+                </h3>
+                <p className="text-slate-400 text-sm md:text-base max-w-3xl leading-relaxed">
+                  官方媒體專題剖析 YIMI Group 最新佈局，探討如何透過 AIGC 網絡短劇、AI 電影製作與專屬線上訂閱平台，構建大灣區次世代數字科技矩陣。
+                </p>
+              </div>
+            </div>
+            {/* 帶有安全屬性的外部連結 */}
+            <a
+              href="https://m.mp.oeeee.com/a/BAAFRD0000202608091640962.html?layer=2&share=chat&isndappinstalled=0&wxuid=ogVRcdMf0KOvZ_9l4nqESnO93FmE&wxsalt=4757fa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full md:w-auto px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors border border-slate-700 shrink-0 group"
+            >
+              閱讀完整報導 <ExternalLink size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </a>
           </div>
         </div>
       </section>
@@ -243,9 +275,9 @@ export default function Home() {
 
                 <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-slate-800 flex flex-col sm:flex-row gap-4">
                   {activeModal === 'platform' ? (
-                     <a href="https://your-subscription-platform.com" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center text-white bg-blue-600 hover:bg-blue-500 font-bold transition-all text-sm md:text-base p-4 rounded-xl shadow-lg shadow-blue-500/20">
+                     <Link href="/platform" className="flex-1 flex items-center justify-center text-white bg-blue-600 hover:bg-blue-500 font-bold transition-all text-sm md:text-base p-4 rounded-xl shadow-lg shadow-blue-500/20">
                        前往線上訂閱平台 <Globe size={18} className="ml-2" />
-                     </a>
+                     </Link>
                   ) : null}
                   <button 
                     onClick={() => handleOpenContact(activeData.title)}
