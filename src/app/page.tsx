@@ -1,186 +1,171 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ArrowRight, Globe, Cpu, Blocks, Building2, BarChart3, 
-  Shield, Target, Zap, ShieldCheck, Users, BarChart, X, Send, CheckCircle2 
+  Shield, Target, Zap, ShieldCheck, Users, BarChart, X, Send, CheckCircle2, 
+  Sparkles, Clapperboard, MonitorPlay, Layers 
 } from 'lucide-react';
 import NewsWidget from '@/components/NewsWidget';
 import MarketTicker from '@/components/MarketTicker';
 
-const btn1DeepResearch = `由集團 AI 引擎即時分析全球政策導向、金融波動及行業深度動態。我們的 AI 模型不僅分析 Market Ticker 等每日開盤數據，更能針對國際政治、大宗商品期貨、智慧地產園區管理等特定領域，生成具有國際投行水準的深度研究報告與決策建議，為跨境資本開拓新的增長極。`;
-
+// ================= 全新業務矩陣資料 (AIGC 戰略升級版) =================
 const servicesData = [
   {
-    id: 'ai',
-    icon: <Cpu className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
-    title: 'AI 領域與創意工業',
-    shortDesc: '針對 AI 趨勢發展多媒體平台創意工業，利用生成式技術重塑內容生產力與商業轉化率。',
-    deepImage: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop',
-    deepTitle: 'AI 雙引擎：驅動工業升級與營銷革命',
+    id: 'aigc',
+    icon: <Clapperboard className="text-purple-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
+    title: 'AIGC 數字內容與傳媒',
+    shortDesc: '專注於網絡短劇、AI 電影及創新數字媒體內容的策劃、製作與發行，打造泛娛樂 IP。',
+    deepImage: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop', // 替換為科技娛樂感圖片
+    deepTitle: '引領下一代生成式數字娛樂',
     deepPoints: [
-      { icon: <BarChart size={18}/>, title: '企業級 AI 生產優化', desc: '深入企業核心工業流程，利用 AI 模型進行大數據過濾、預測性維護與供應鏈優化，大幅提升產能效率。' },
-      { icon: <Zap size={18}/>, title: 'AIGC 創意廣告平台', desc: '融合專業頂尖人才與 AI 生成技術，打造個性化、低成本、高效率的多媒體動態宣傳矩陣，精準觸達目標客群。' }
+      { icon: <MonitorPlay size={18}/>, title: 'AI 影視策劃與發行', desc: '從劇本生成、虛擬角色塑造到後期渲染，全面引入 AI 輔助，大幅縮短網絡短劇與 AI 電影的製作週期並降低成本。' },
+      { icon: <Zap size={18}/>, title: '全矩陣數字媒體宣發', desc: '利用大數據模型預測爆款趨勢，並透過跨平台分發機制，精準觸達全球受眾，最大化數字內容的商業變現能力。' }
     ],
-    stat: '提升 40% 內容生產效率'
+    stat: '重新定義數字娛樂生產力'
   },
   {
-    id: 'web3',
-    icon: <Blocks className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
-    title: 'Web3 與區塊鏈消費',
-    shortDesc: '實體與虛擬雙結合模式，以區塊鏈為底層重構全新消費場景與價值交換體系。',
-    deepImage: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1000&auto=format&fit=crop',
-    deepTitle: '構建大中華區中高端價值交換網絡',
+    id: 'platform',
+    icon: <MonitorPlay className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
+    title: 'YIMI 數字與訂閱平台',
+    shortDesc: '獨立運營的線上訂閱與分發生態。直接向企業與消費者提供專屬數字產品與技術服務。',
+    deepImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop', // 替換為平台螢幕感圖片
+    deepTitle: '構建企業與個人的專屬 SaaS 生態',
     deepPoints: [
-      { icon: <ShieldCheck size={18}/>, title: '底層信任架構', desc: '以區塊鏈技術確保數據不可篡改，保障跨媒體、跨企業、跨網絡的用戶隱私與資產安全。' },
-      { icon: <Zap size={18}/>, title: '虛實融合 (Phygital) 消費', desc: '打通實體商圈與虛擬資產，實現大中華區中高端消費群的跨界積分互換與專屬權益，重塑會員忠誠度生態。' }
+      { icon: <Users size={18}/>, title: 'B2C 數字內容訂閱', desc: '為 C 端用戶提供無縫的線上觀影、短劇解鎖及高級會員專屬的數字資產體驗。' },
+      { icon: <Cpu size={18}/>, title: 'B2B 企業級 API 賦能', desc: '向企業客戶開放 AI 技術接口與解決方案訂閱，助力實體產業快速實現智能化轉型。' }
     ],
-    stat: '無縫鏈接跨界消費場景'
+    stat: '全球化在線訂閱生態'
   },
   {
-    id: 'capital',
-    icon: <Globe className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
-    title: '跨境資本與貿易',
-    shortDesc: '南北向資金多通道管理，專注大宗貿易買賣與專業項目資產管理，鏈接全球流動性。',
-    deepImage: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop', // 已更新為穩定圖源
-    deepTitle: '發揮「超級聯繫人」戰略優勢',
+    id: 'ai-tech',
+    icon: <BrainCircuit size={44} className="text-emerald-500 mb-6 group-hover:scale-110 transition-transform" />,
+    title: 'AI 核心科技研發',
+    shortDesc: '以尖端人工智能算法為基石，提供企業級的智能解決方案與大數據深度分析。',
+    deepImage: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1000&auto=format&fit=crop', // 替換為運算晶片感圖片
+    deepTitle: '數據驅動的工業與商業大腦',
     deepPoints: [
-      { icon: <Globe size={18}/>, title: '大額資金與資產管理', desc: '深度配合國家與地區金融政策，為大型企業提供安全、合規的南北向資金調撥與跨境資產配置方案。' },
-      { icon: <Building2 size={18}/>, title: '大宗貿易樞紐', desc: '利用香港國際金融中心地位，協助企業進行跨國大宗商品買賣、供應鏈融資與風險對沖。' }
+      { icon: <BarChart size={18}/>, title: '企業級智能優化', desc: '深入企業核心流程，利用 AI 模型進行大數據過濾、預測性維護與供應鏈優化，大幅提升營運效率。' },
+      { icon: <ShieldCheck size={18}/>, title: '金融與合規模型', desc: '部署私有化大模型，確保跨境資本調撥、大宗貿易合約的安全審查與實時風險對沖。' }
     ],
-    stat: '精準對接全球資本流動性'
+    stat: '核心算法賦能百業'
   },
   {
-    id: 'realestate',
-    icon: <Building2 className="text-blue-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
-    title: '地產開發及營運',
-    shortDesc: '高端地產項目開發，結合智慧城市與科技園區管理，輸出國際級的產城融合營運服務。',
-    deepImage: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1000&auto=format&fit=crop',
-    deepTitle: '賦能全球菁英的頂級人居生態',
+    id: 'smart-commerce',
+    icon: <Layers className="text-amber-500 mb-6 group-hover:scale-110 transition-transform" size={44} />,
+    title: '區塊鏈與智慧商業',
+    shortDesc: '融合區塊鏈重塑消費場景信任機制，結合實體資本發展跨境商業與智慧地產項目。',
+    deepImage: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1000&auto=format&fit=crop', // 智慧城市圖片
+    deepTitle: '虛實融合 (Phygital) 的未來場景',
     deepPoints: [
-      { icon: <Users size={18}/>, title: '對接優才/高才引進', desc: '緊跟內外人才流動趨勢，開發符合國際標準的優質地產項目，助力國內外頂尖人才無縫融入本地與世界各地。' },
-      { icon: <Zap size={18}/>, title: '智慧產城運營', desc: '整合 IoT 與 AI 樓宇管理系統，打造兼具生活品質與創新活力的科技園區及高端住宅聚落。' }
+      { icon: <Globe size={18}/>, title: '跨境資本與大宗貿易', desc: '深度配合區域金融政策，為大型企業提供合規的資金調撥方案與跨國大宗商品買賣樞紐服務。' },
+      { icon: <Building2 size={18}/>, title: '智慧產城與高端地產', desc: '整合 IoT 與 AI 樓宇管理系統，開發符合國際標準的優質地產項目，打造兼具生活品質與創新活力的科技聚落。' }
     ],
-    stat: '打造國際級智慧生活圈'
+    stat: '打通實體與數字資本'
   }
 ];
 
+// 用戶手動引入圖標 (因為上方未引入 BrainCircuit)
+import { BrainCircuit } from 'lucide-react';
+
+const btn1DeepResearch = `由集團 AI 引擎即時分析全球政策導向、金融波動及行業深度動態。我們的 AI 模型不僅分析 Market Ticker 等每日開盤數據，更能針對國際政治、大宗商品期貨、智慧地產園區管理等特定領域，生成具有國際投行水準的深度研究報告與決策建議，為跨境資本開拓新的增長極。`;
+
 export default function Home() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  // 新增狀態：控制「聯繫表單」的顯示與情境
   const [contactContext, setContactContext] = useState<string | null>(null);
-  // 新增狀態：表單提交成功
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const activeData = servicesData.find(s => s.id === activeModal);
 
-  // 處理開啟聯繫表單
   const handleOpenContact = (title: string) => {
-    setActiveModal(null); // 關閉介紹彈窗
-    setContactContext(title); // 設定表單的情境標題
+    setActiveModal(null); 
+    setContactContext(title); 
     setIsSubmitted(false);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // 獲取表單數據
     const formData = new FormData(e.currentTarget);
     formData.append('來源板塊', contactContext || '未定');
 
     try {
-      // 這裡換成了你的專屬 Formspree API 端點
       await fetch('https://formspree.io/f/meepbnpb', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
+        method: 'POST', body: formData, headers: { 'Accept': 'application/json' }
       });
       setIsSubmitted(true);
-      setTimeout(() => {
-        setContactContext(null);
-      }, 3000);
+      setTimeout(() => { setContactContext(null); }, 3000);
     } catch (error) {
       alert('發送失敗，請稍後再試。');
     }
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 relative selection:bg-blue-600 selection:text-white font-sans">
+    <main className="min-h-screen bg-slate-950 text-slate-50 relative selection:bg-blue-600 selection:text-white font-sans overflow-x-hidden">
       
       <MarketTicker />
 
-      {/* 2. Hero Section 首屏視覺 */}
-      <section className="relative flex flex-col items-center justify-center min-h-[calc(100vh-40px)] px-6 py-20 overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-20 bg-[url('/background.png')] bg-cover bg-center" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-900/30 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-indigo-900/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
+      {/* ================= 1. 全新科技感首屏 (Hero Section) ================= */}
+      <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32 border-b border-slate-900">
+        {/* 背景光暈特效 (AIGC 氛圍) */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+        <div className="absolute top-1/4 right-0 w-[600px] h-[400px] bg-purple-600/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
 
-        <div className="relative z-10 max-w-5xl mx-auto text-center mt-10 md:mt-0 backdrop-blur-sm bg-slate-950/20 p-8 md:p-12 rounded-3xl border border-white/5 shadow-2xl">
+        <div className="container mx-auto px-6 relative z-10 text-center">
           
-         {/* 公司 LOGO 區塊 - 透過 CSS 代碼直接優化大小與顏色 */}
+          {/* Logo 處理 (維持銀白色高質感) */}
           <div className="flex justify-center mb-8 relative">
-            {/* Logo 背後的微光暈，增加層次感 */}
             <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full w-32 h-32 mx-auto -z-10"></div>
-            
             <img 
               src="/logo.png" 
               alt="YIMI Group Logo" 
-              // 核心修改在這裡：
-              // 1. 大小縮減：h-14 md:h-20 讓 Logo 變精緻，不再喧賓奪主
-              // 2. 顏色魔法：使用 grayscale 和 brightness-[300%] 將原本的橙色強行轉為高質感的「銀白色」
-              // 3. 質感提升：加入 drop-shadow 讓它有發光的感覺
               className="h-14 md:h-20 w-auto object-contain grayscale brightness-[300%] contrast-125 opacity-90 hover:opacity-100 transition-all drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" 
               onError={(e) => e.currentTarget.style.display = 'none'} 
             />
           </div>
-          
-          <div className="inline-flex items-center px-4 py-1.5 mb-6 text-xs font-semibold tracking-widest text-blue-400 uppercase bg-blue-900/30 border border-blue-500/30 rounded-full backdrop-blur-sm">
-            <Globe className="w-4 h-4 mr-2" /> Global Hub for AI & Capital
+
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 border border-slate-700 text-blue-400 text-sm font-medium mb-8 backdrop-blur-md shadow-lg shadow-blue-900/20">
+            <Sparkles size={16} className="animate-pulse" />
+            <span>YIMI GROUP 戰略升級：全面佈局 AIGC 數字生態</span>
           </div>
           
-          {/* 衝擊力字體設計 */}
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-slate-400 drop-shadow-lg">
-            蟻米集團
-            <span className="block text-xl md:text-3xl text-blue-400 mt-4 font-light tracking-widest uppercase">
-              YIMI Group
-            </span>
+          <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight mb-8 leading-tight">
+            以 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">人工智能</span> 為核心<br/>
+            構建綜合數字科技生態
           </h1>
           
-          <p className="mt-6 text-base md:text-xl max-w-3xl mx-auto text-slate-300 leading-relaxed font-light">
-            立足香港金融樞紐，依託中國大陸「蟻米控股」強大的科技產投生態與 <strong className="text-white font-medium">17億創投資本</strong>。我們專注於驅動 <strong className="text-white font-medium">AI 科技、區塊鏈消費、跨境資本與智慧地產</strong> 的全球化佈局。
+          <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-12">
+            我們致力於 AI 科技、區塊鏈消費與智慧地產，並強勢拓展 <strong className="text-white font-semibold">AIGC 數字內容業務</strong>。從網絡短劇到 AI 電影策劃與發行，透過旗下專屬線上平台，為全球企業與消費者提供頂尖的數字產品與訂閱服務。
           </p>
           
-          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4 w-full sm:w-auto px-4 sm:px-0 relative z-20">
-            <Link href="#ai-news" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.3)] group cursor-pointer">
-              探索 AI 財經智庫 <Target size={18} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link href="#ecosystem" className="w-full sm:w-auto bg-slate-800/80 hover:bg-slate-700 text-white border border-slate-700 px-8 py-4 rounded-full font-semibold transition-all flex items-center justify-center gap-2 backdrop-blur-sm group cursor-pointer">
-              了解集團生態 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-20">
+            {/* 💡 主要引導按鈕：前往訂閱平台 */}
+            <a href="https://your-subscription-platform.com" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2">
+              <Globe size={18} /> 前往 YIMI 數字訂閱平台
+            </a>
+            <button onClick={() => document.getElementById('ecosystem')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all border border-slate-700 flex items-center justify-center gap-2">
+              探索核心業務矩陣 <ArrowRight size={18} />
+            </button>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent z-10"></div>
       </section>
 
       {/* 實力背書區塊 */}
-      <section className="relative z-20 border-y border-slate-800 bg-slate-900/80 backdrop-blur-md py-16 px-6">
+      <section className="relative z-20 bg-slate-900/40 backdrop-blur-md py-16 px-6 border-b border-slate-900">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className="lg:w-1/2 text-center lg:text-left">
             <h3 className="text-sm text-blue-400 font-bold uppercase tracking-widest mb-2">中國強大後盾 Backed By</h3>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">廣州蟻米控股</h2>
             <p className="text-slate-400 text-base leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              全國獨創<span className="text-slate-200 font-medium">「教+創+孵+投」</span>四位一體閉環生態。作為粵港澳大灣區數字化與區塊鏈產業的領軍者，我們成功投資孵化多家上市科技企業，旗下的創投基金管理規模達17億元人民幣。
+              全國獨創<span className="text-slate-200 font-medium">「教+創+孵+投」</span>四位一體閉環生態。作為大灣區數字化產業的領軍者，我們成功孵化多家上市企業，旗下的創投基金管理規模達17億元人民幣。
             </p>
           </div>
           <div className="lg:w-1/2 grid grid-cols-2 gap-4 w-full">
             {[
               { label: '管理創投基金', value: '17 億+' },
               { label: '運營產業園區', value: '4 座' },
-              { label: '深度佈局領域', value: 'AI & Web3' },
-              { label: '核心投資模式', value: '教創孵投' },
+              { label: '深度佈局領域', value: 'AIGC & Web3' },
+              { label: '核心戰略驅動', value: 'AI 賦能' },
             ].map((stat, i) => (
               <div key={i} className="p-6 rounded-2xl bg-slate-950/50 border border-slate-800 text-center flex flex-col justify-center transition-colors hover:border-blue-500/50">
                 <div className="text-2xl md:text-3xl font-bold text-white mb-2">{stat.value}</div>
@@ -191,29 +176,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 國際業務板塊 */}
+      {/* ================= 2. 核心業務矩陣 (Business Matrix) ================= */}
       <section id="ecosystem" className="py-24 max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight text-white">集團國際業務佈局</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight text-white">業務矩陣與數字版圖</h2>
           <p className="text-slate-400 max-w-3xl mx-auto leading-relaxed text-lg">
-            以香港為超級樞紐，全面聯動 AI、區塊鏈、跨境資本與高端地產，為全球企業提供數字化轉型與資產增值的終極解方。
+            打破實體與虛擬的邊界，透過四大核心引擎驅動全球企業與消費者的未來體驗。
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {servicesData.map((service) => (
             <div 
               key={service.id}
               onClick={() => setActiveModal(service.id)}
-              className="p-8 md:p-10 bg-slate-900 rounded-3xl border border-slate-800 hover:border-blue-500/50 hover:bg-slate-800/50 transition-all duration-300 group cursor-pointer shadow-lg hover:shadow-blue-900/20 flex flex-col justify-between"
+              className="p-8 bg-slate-900/50 backdrop-blur-sm rounded-3xl border border-slate-800 hover:border-blue-500/50 hover:-translate-y-2 transition-all duration-300 group cursor-pointer shadow-lg hover:shadow-blue-900/20 flex flex-col justify-between"
             >
               <div>
                 <div className="flex justify-between items-start">
                   {service.icon}
                   <ArrowRight className="text-slate-600 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" size={24} />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-white">{service.title}</h3>
-                <p className="text-slate-400 leading-relaxed">{service.shortDesc}</p>
+                <h3 className="text-xl font-bold mb-3 text-white">{service.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{service.shortDesc}</p>
               </div>
             </div>
           ))}
@@ -222,7 +207,7 @@ export default function Home() {
         {/* 業務詳情彈窗 (Modal) */}
         {activeModal && activeData && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" onClick={() => setActiveModal(null)}></div>
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity" onClick={() => setActiveModal(null)}></div>
             <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto md:overflow-y-visible">
               <button onClick={() => setActiveModal(null)} className="absolute top-4 right-4 p-2 bg-slate-800/80 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-colors z-20">
                 <X size={24} />
@@ -256,14 +241,17 @@ export default function Home() {
                   ))}
                 </div>
 
-                <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-slate-800">
-                  {/* 改動：點擊這裡會觸發新的表單彈窗 */}
+                <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-slate-800 flex flex-col sm:flex-row gap-4">
+                  {activeModal === 'platform' ? (
+                     <a href="https://your-subscription-platform.com" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center text-white bg-blue-600 hover:bg-blue-500 font-bold transition-all text-sm md:text-base p-4 rounded-xl shadow-lg shadow-blue-500/20">
+                       前往線上訂閱平台 <Globe size={18} className="ml-2" />
+                     </a>
+                  ) : null}
                   <button 
                     onClick={() => handleOpenContact(activeData.title)}
-                    className="flex items-center text-blue-400 hover:text-blue-300 font-semibold group transition-colors text-sm md:text-base w-full p-4 bg-blue-900/20 rounded-xl justify-center border border-blue-500/20 hover:bg-blue-900/40"
+                    className="flex-1 flex items-center text-blue-400 hover:text-blue-300 font-semibold group transition-colors text-sm md:text-base p-4 bg-slate-800 rounded-xl justify-center border border-slate-700 hover:bg-slate-700"
                   >
-                    聯繫業務負責人進一步探討 
-                    <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                    聯繫業務對接 <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -271,7 +259,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* 新增：聯絡表單彈窗 (Context-Aware Form) */}
+        {/* 聯絡表單彈窗 */}
         {contactContext && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity" onClick={() => setContactContext(null)}></div>
@@ -291,31 +279,28 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <h3 className="text-2xl font-bold text-white mb-2">專屬業務對接</h3>
+                  <h3 className="text-2xl font-bold text-white mb-2">專屬業務諮詢</h3>
                   <p className="text-slate-400 text-sm mb-6 flex items-center">
-                    您正在諮詢：<span className="text-blue-400 font-medium ml-2 px-2 py-1 bg-blue-900/30 rounded-md">{contactContext}</span>
+                    板塊：<span className="text-blue-400 font-medium ml-2 px-2 py-1 bg-blue-900/30 rounded-md">{contactContext}</span>
                   </p>
 
                  <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">您想了解的具體方向或面臨的挑戰？</label>
-                    {/* 務必確認有 name="諮詢需求" */}
+                    <label className="block text-sm font-medium text-slate-300 mb-1">您的具體需求或合作意向？</label>
                     <textarea 
                       name="諮詢需求" 
                       required
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all h-28 resize-none placeholder:text-slate-600"
-                      placeholder="例如：我們公司想引入 AI 優化產線，或者需要大宗貿易的資金通道..."
+                      placeholder="例如：了解短劇聯合發行，或需要企業 API 技術接入..."
                     ></textarea>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-300 mb-1">您的姓名 / 稱呼</label>
-                      {/* 務必確認有 name="客戶姓名" */}
                       <input type="text" name="客戶姓名" required className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" placeholder="王先生" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">聯絡方式 (Email 或 電話)</label>
-                      {/* 務必確認有 name="聯絡方式" */}
+                      <label className="block text-sm font-medium text-slate-300 mb-1">聯絡方式</label>
                       <input type="text" name="聯絡方式" required className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" placeholder="your@email.com" />
                     </div>
                   </div>
@@ -353,7 +338,6 @@ export default function Home() {
       <footer className="bg-slate-950 py-12 border-t border-slate-900">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-slate-500 text-sm text-center md:text-left">
-            {/* 自動獲取當前年份 */}
             © 2018-{new Date().getFullYear()} 蟻米集團（國際）有限公司 YIMI Group. All Rights Reserved.
           </div>
           <div className="flex items-center justify-center gap-6 text-sm text-slate-500">
