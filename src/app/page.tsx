@@ -140,9 +140,9 @@ export default function Home() {
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-20">
             {/* 💡 主要引導按鈕：前往訂閱平台 */}
-            <a href="https://your-subscription-platform.com" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2">
-              <Globe size={18} /> 前往 YIMI 數字訂閱平台
-            </a>
+            <Link href="/platform" className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2">
+  <Globe size={18} /> 前往 ReelStory 數字訂閱平台
+</Link>
             <button onClick={() => document.getElementById('ecosystem')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all border border-slate-700 flex items-center justify-center gap-2">
               探索核心業務矩陣 <ArrowRight size={18} />
             </button>
