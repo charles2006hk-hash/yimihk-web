@@ -417,7 +417,7 @@ function AdvancedGenerator({ onBack }: { onBack: () => void }) {
     holidayList.forEach(h => holidayMap[h.dateKey.toUpperCase()] = true);
     
     const headerStyle = { font: { bold: true }, fill: { fgColor: { rgb: "F8FAFC" } }, border: borderThin };
-    const headerRow = [{ v: "Staff Name", s: headerStyle }];
+    const headerRow: any[] = [{ v: "Staff Name", s: headerStyle }];
     for(let d=1; d<=daysInMonth; d++) {
       const dateKey = `${d}-${new Date(year, month-1, d).toLocaleString('en-US',{month:'short'}).toUpperCase()}`;
       const isSun = new Date(year, month-1, d).getDay() === 0;
@@ -430,7 +430,7 @@ function AdvancedGenerator({ onBack }: { onBack: () => void }) {
     const shiftTypes = ['M', 'L', 'F']; 
 
     staffList.forEach((staff, sIdx) => {
-      const row = [{ v: staff.name, s: { border: borderThin } }];
+      const row: any[] = [{ v: staff.name, s: { border: borderThin } }];
       for (let d = 1; d <= daysInMonth; d++) {
         const dateKey = `${d}-${new Date(year, month-1, d).toLocaleString('en-US',{month:'short'}).toUpperCase()}`;
         const isSun = new Date(year, month-1, d).getDay() === 0;
