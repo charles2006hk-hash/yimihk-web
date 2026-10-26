@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import { 
   Save, Trash2, Clock, Download, Eye, UploadCloud, Users, 
   Calendar, Building2, Palmtree, Plus, ArrowLeft, CarFront, 
@@ -56,8 +56,19 @@ const defaultStaffList = Array.from({ length: 10 }, (_, i) => ({
   id: i + 1, name: `Staff ${String.fromCharCode(65 + i)}`, q2: 1, q3: 1, q4: 1,
 }));
 
+// 共用 Excel 樣式
+const borderThin = {
+  top: { style: 'thin', color: { rgb: "000000" } }, bottom: { style: 'thin', color: { rgb: "000000" } },
+  left: { style: 'thin', color: { rgb: "000000" } }, right: { style: 'thin', color: { rgb: "000000" } }
+};
+const fillSun = { fgColor: { rgb: "F4CCCC" } };
+const fillHol = { fgColor: { rgb: "FFF2CC" } };
+const fillGray = { fgColor: { rgb: "D9D9D9" } };
+const fillBlue = { fgColor: { rgb: "CFE2F3" } };
+
+
 // ==========================================
-// 2. Crown Motor 專屬版元件 (完整版)
+// 2. Crown Motor 專屬版元件 (嚴格格式版)
 // ==========================================
 function CrownMotorGenerator({ onBack }: { onBack: () => void }) {
   const [companyName, setCompanyName] = useState('Crown Motor Ltd.');
@@ -127,61 +138,115 @@ function CrownMotorGenerator({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const generateMasterData = () => {
-    const masterData: any[][] = [];
+  // 生成附帶 Excel 樣式的數據陣列
+  const generateStyledMasterData = () => {
+    const data: any[][] = [];
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     const holidayMap: Record<string, string> = {};
     holidayList.forEach(h => { holidayMap[h.dateKey.toUpperCase()] = h.name; });
 
     months.forEach((mName, mIdx) => {
-      masterData.push(["", "", "", `DUTY ROSTER FOR ${mName} ${year}`]);
-      masterData.push(["", "SUN & HOLIDAY 10:00-19:00", "", "", "", "MON - SAT 09:00-19:00"]);
-      masterData.push([]);
+      // 標題行
+      const titleRow = Array(11).fill("");
+      titleRow[3] = { v: `DUTY ROSTER FOR ${mName} ${year}`, s: { font: { bold: true, sz: 12 } } };
+      data.push(titleRow);
+
+      // 副標題行
+      const subRow = Array(11).fill("");
+      subRow[1] = { v: "SUN & HOLIDAY 10:00-19:00", s: { font: { italic: true } } };
+      subRow[5] = { v: "MON - SAT 09:00-19:00", s: { font: { italic: true } } };
+      data.push(subRow);
+      data.push(Array(11).fill("")); // 空行
+
       const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
       for (let d = 1; d <= daysInMonth; d++) {
         const dateObj = new Date(year, mIdx, d);
         const dayStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
         const dateKey = `${d}-${mName}`;
         const isHoliday = holidayMap[dateKey];
-        const row = [dateKey, dayStr, isHoliday || ""];
+        const isSun = dayStr === "Sun";
+
+        // 設定格線與背景色
+        let cellStyle: any = { border: borderThin };
+        if (isSun) cellStyle.fill = fillSun;
+        else if (isHoliday) cellStyle.fill = fillHol;
+
+        const row = Array(11).fill({ v: "", s: cellStyle });
+        row[0] = { v: dateKey, s: cellStyle };
+        row[1] = { v: dayStr, s: cellStyle };
+        row[2] = { v: isHoliday || "", s: cellStyle };
         
-        if (dayStr === "Sun" || isHoliday) {
-          row.push(staffList[d % staffCount]?.name || ""); row.push(staffList[(d + 1) % staffCount]?.name || ""); row.push("");
-          row.push(staffList[(d + 2) % staffCount]?.name || ""); row.push(staffList[(d + 3) % staffCount]?.name || ""); 
+        // 皇冠排班邏輯 (早/中/晚 分欄)
+        if (isSun || isHoliday) {
+          row[3] = { v: staffList[d % staffCount]?.name || "", s: cellStyle };
+          row[4] = { v: staffList[(d + 1) % staffCount]?.name || "", s: cellStyle };
+          row[8] = { v: staffList[(d + 2) % staffCount]?.name || "", s: cellStyle };
+          row[9] = { v: staffList[(d + 3) % staffCount]?.name || "", s: cellStyle };
+          row[10] = { v: staffList[(d + 4) % staffCount]?.name || "", s: cellStyle };
         } else {
-           row.push(""); row.push(""); row.push("");
-           row.push(staffList[d % staffCount]?.name || ""); row.push(staffList[(d + 1) % staffCount]?.name || ""); row.push(staffList[(d + 2) % staffCount]?.name || "");
+          row[5] = { v: staffList[d % staffCount]?.name || "", s: cellStyle };
+          row[6] = { v: staffList[(d + 1) % staffCount]?.name || "", s: cellStyle };
+          row[7] = { v: staffList[(d + 2) % staffCount]?.name || "", s: cellStyle };
         }
-        masterData.push(row);
-        if (dayStr === "Sun") masterData.push([]); 
+        data.push(row);
+        if (isSun) data.push(Array(11).fill("")); // 週日後空行
       }
-      masterData.push([]);
+      data.push(Array(11).fill(""));
+      
+      // 底部統計
       for(let i=0; i<Math.ceil(staffCount/2); i++) {
          const ls = staffList[i], rs = staffList[i + Math.ceil(staffCount/2)];
-         masterData.push([ls ? ls.id : "", ls ? ls.name : "", "", rs ? rs.id : "", rs ? rs.name : ""]);
+         const fRow = Array(11).fill("");
+         fRow[0] = { v: ls ? ls.id : "", s: { font: { bold: true } } };
+         fRow[1] = { v: ls ? ls.name : "", s: { font: { bold: true } } };
+         fRow[3] = { v: rs ? rs.id : "", s: { font: { bold: true } } };
+         fRow[4] = { v: rs ? rs.name : "", s: { font: { bold: true } } };
+         data.push(fRow);
       }
-      masterData.push([], []);
+      data.push([], []);
     });
-    return masterData;
+    return data;
   };
 
   const handlePreview = () => {
-    setPreviewData(generateMasterData());
+    setPreviewData(generateStyledMasterData());
     setShowPreview(true);
   };
 
-  
   const handleDownloadExcel = () => {
     const wb = XLSX.utils.book_new();
-    const settingsData = [["Company", companyName, "Year", year], [], ["ID", "Staff Name", "Q2 抽籤", "Q3 抽籤", "Q4 抽籤"], ...staffList.map(s => [s.id, s.name, s.q2, s.q3, s.q4])];
+
+    // 1. Settings
+    const settingsHeaderStyle = { font: { bold: true }, fill: fillGray, border: borderThin };
+    const settingsData = [
+      [{ v: "ID", s: settingsHeaderStyle }, { v: "Staff Name", s: settingsHeaderStyle }, { v: "Q2 抽籤", s: settingsHeaderStyle }, { v: "Q3 抽籤", s: settingsHeaderStyle }, { v: "Q4 抽籤", s: settingsHeaderStyle }],
+      ...staffList.map(s => [
+        { v: s.id, s: { border: borderThin } }, { v: s.name, s: { border: borderThin } },
+        { v: s.q2, s: { border: borderThin } }, { v: s.q3, s: { border: borderThin } }, { v: s.q4, s: { border: borderThin } }
+      ])
+    ];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(settingsData), "Settings");
-    const wsMaster = XLSX.utils.aoa_to_sheet(generateMasterData());
-    wsMaster['!cols'] = [{wch: 10}, {wch: 6}, {wch: 18}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}];
+
+    // 2. Master Roster
+    const wsMaster = XLSX.utils.aoa_to_sheet(generateStyledMasterData());
+    wsMaster['!cols'] = [{wch: 10}, {wch: 6}, {wch: 18}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}];
     XLSX.utils.book_append_sheet(wb, wsMaster, `Master_Roster_${year}`);
-    const statsData = [["Staff Statistics", "", "", "", "", ""], [], ["Staff Name", "Total Days", "Weekday Full", "Weekend/PH Early", "Weekend/PH Late", "Check Sum"], ...staffList.map(s => [s.name, 130, 70, 30, 30, 130])];
+
+    // 3. Stats
+    const statsHeaderStyle = { font: { bold: true }, fill: fillBlue, border: borderThin };
+    const statsData = [
+      [{ v: "Staff Statistics", s: { font: { bold: true, sz: 14 } } }], [],
+      ["Staff Name", "Total Days", "Weekday Full", "Weekend/PH Early", "Weekend/PH Late", "Check Sum"].map(h => ({ v: h, s: statsHeaderStyle })),
+      ...staffList.map(s => [
+        { v: s.name, s: { border: borderThin } }, { v: 130, s: { border: borderThin } },
+        { v: 70, s: { border: borderThin } }, { v: 30, s: { border: borderThin } },
+        { v: 30, s: { border: borderThin } }, { v: 130, s: { border: borderThin } }
+      ])
+    ];
     const wsStats = XLSX.utils.aoa_to_sheet(statsData);
     wsStats['!cols'] = [{wch: 15}, {wch: 12}, {wch: 15}, {wch: 20}, {wch: 20}, {wch: 12}];
     XLSX.utils.book_append_sheet(wb, wsStats, "Staff_Statistics");
+
     XLSX.writeFile(wb, `${companyName}_Duty_Roster_${year}.xlsx`);
   };
 
@@ -191,7 +256,7 @@ function CrownMotorGenerator({ onBack }: { onBack: () => void }) {
         <button onClick={onBack} className="p-2 hover:bg-slate-200 rounded-full bg-slate-100"><ArrowLeft size={20} className="text-slate-700" /></button>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2"><CarFront className="text-indigo-600" /> Crown Motor 專屬編更系統</h1>
-          <p className="text-slate-500 text-sm">硬性要求的排班格式與輸出標準</p>
+          <p className="text-slate-500 text-sm">完全符合硬性要求的排班格式與樣式標準</p>
         </div>
       </div>
 
@@ -207,7 +272,7 @@ function CrownMotorGenerator({ onBack }: { onBack: () => void }) {
               <div>
                 <label className="block text-sm text-slate-600 mb-1">排班年份</label>
                 <select value={year} onChange={handleYearChange} className="w-full border p-2.5 rounded-lg text-slate-900 bg-white focus:ring-2 outline-none font-medium">
-                  <option value={2025}>2025</option><option value={2026}>2026</option><option value={2027}>2027</option><option value={2028}>2028</option>
+                  <option value={2026}>2026</option><option value={2027}>2027</option><option value={2028}>2028</option>
                 </select>
               </div>
               <div>
@@ -247,22 +312,31 @@ function CrownMotorGenerator({ onBack }: { onBack: () => void }) {
 
           <div className="flex gap-4">
             <button onClick={handlePreview} className="flex-1 flex justify-center gap-2 bg-slate-800 text-white py-3 rounded-xl hover:bg-slate-900 font-medium transition"><Eye size={20} /> 預覽報表</button>
-            <button onClick={handleDownloadExcel} className="flex-1 flex justify-center gap-2 bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 font-medium transition"><Download size={20} /> 匯出 Excel</button>
+            <button onClick={handleDownloadExcel} className="flex-1 flex justify-center gap-2 bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 font-medium transition"><Download size={20} /> 匯出 Excel (含格式)</button>
           </div>
 
           {showPreview && (
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-              <h2 className="text-lg font-bold mb-4 border-b pb-2 text-slate-800">排班表預覽</h2>
-              <div className="overflow-x-auto h-[500px] border rounded-lg">
-                <table className="min-w-full text-sm border-collapse bg-white">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-4">
+              <h2 className="text-lg font-bold mb-4 border-b pb-3 text-slate-800">排班表預覽 ({year}年)</h2>
+              <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-slate-200">
+                <table className="min-w-full text-sm border-collapse">
                   <tbody>
-                    {previewData.map((row, i) => (
-                      <tr key={i} className="border-b">
-                        {row.map((cell, j) => {
-                          let bg = "bg-white", textStyle = "text-slate-800";
-                          if (row[1] === "Sun") { bg = "bg-rose-50"; textStyle = "text-rose-700"; }
-                          else if (row[2] && row[0]?.includes("-")) { bg = "bg-amber-50"; textStyle = "text-amber-700"; }
-                          return <td key={j} className={`p-2 border-r whitespace-nowrap ${bg} ${textStyle} ${cell?.toString().includes("DUTY ROSTER") ? 'font-bold bg-slate-100' : ''}`}>{cell}</td>;
+                    {previewData.map((row, rowIndex) => (
+                      <tr key={rowIndex} className="border-b border-slate-100 hover:bg-slate-50/50">
+                        {row.map((cellObj, cellIndex) => {
+                          // 解析 xlsx-js-style 的物件格式回文字供 React 顯示
+                          const cellValue = cellObj && typeof cellObj === 'object' ? cellObj.v : cellObj;
+                          
+                          let bg = "bg-white", textStyle = "text-slate-600";
+                          if (row[1]?.v === "Sun") { bg = "bg-rose-50"; textStyle = "text-rose-700"; }
+                          else if (row[2]?.v && row[0]?.v?.includes("-")) { bg = "bg-amber-50"; textStyle = "text-amber-700"; }
+                          const isHeader = cellValue?.toString().includes("DUTY ROSTER");
+                          
+                          return (
+                            <td key={cellIndex} className={`p-2.5 border-r border-slate-200 whitespace-nowrap ${bg} ${textStyle} ${isHeader ? 'font-bold text-lg text-slate-800 bg-slate-50' : ''}`}>
+                              {cellValue}
+                            </td>
+                          );
                         })}
                       </tr>
                     ))}
@@ -280,7 +354,7 @@ function CrownMotorGenerator({ onBack }: { onBack: () => void }) {
               <input type="text" placeholder="為當前設定命名..." value={newRecordName} onChange={e => setNewRecordName(e.target.value)} className="flex-1 border border-slate-300 p-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-900" />
               <button onClick={handleSaveRecord} className="bg-emerald-500 hover:bg-emerald-600 text-white p-2.5 rounded-xl transition-colors flex items-center gap-1 font-medium"><Save size={18} /> 儲存</button>
             </div>
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
               {history.length === 0 ? <p className="text-center text-slate-400 text-sm py-8">暫無儲存的記錄</p> : history.map((record) => (
                 <div key={record.id} onClick={() => handleLoadRecord(record)} className="group flex flex-col bg-slate-50 hover:bg-indigo-50 border border-slate-200 rounded-xl p-3.5 cursor-pointer transition-all">
                   <div className="flex justify-between items-start mb-1">
@@ -302,7 +376,7 @@ function CrownMotorGenerator({ onBack }: { onBack: () => void }) {
 }
 
 // ==========================================
-// 3. 通用智能排班版元件 (完整版)
+// 3. 通用智能排班版元件
 // ==========================================
 function AdvancedGenerator({ onBack }: { onBack: () => void }) {
   const [companyName, setCompanyName] = useState('Global Tech Ltd.');
@@ -342,11 +416,12 @@ function AdvancedGenerator({ onBack }: { onBack: () => void }) {
     const holidayMap: Record<string, boolean> = {};
     holidayList.forEach(h => holidayMap[h.dateKey.toUpperCase()] = true);
     
-    const headerRow = ["Staff Name"];
+    const headerStyle = { font: { bold: true }, fill: { fgColor: { rgb: "F8FAFC" } }, border: borderThin };
+    const headerRow = [{ v: "Staff Name", s: headerStyle }];
     for(let d=1; d<=daysInMonth; d++) {
       const dateKey = `${d}-${new Date(year, month-1, d).toLocaleString('en-US',{month:'short'}).toUpperCase()}`;
       const isSun = new Date(year, month-1, d).getDay() === 0;
-      headerRow.push(isSun || holidayMap[dateKey] ? `${d}(休)` : `${d}`);
+      headerRow.push({ v: isSun || holidayMap[dateKey] ? `${d}(休)` : `${d}`, s: headerStyle });
     }
     data.push(headerRow);
 
@@ -355,30 +430,31 @@ function AdvancedGenerator({ onBack }: { onBack: () => void }) {
     const shiftTypes = ['M', 'L', 'F']; 
 
     staffList.forEach((staff, sIdx) => {
-      const row = [staff.name];
+      const row = [{ v: staff.name, s: { border: borderThin } }];
       for (let d = 1; d <= daysInMonth; d++) {
         const dateKey = `${d}-${new Date(year, month-1, d).toLocaleString('en-US',{month:'short'}).toUpperCase()}`;
         const isSun = new Date(year, month-1, d).getDay() === 0;
         const isPublicHoliday = holidayMap[dateKey];
+        let shiftValue = "";
 
         if (algoType === 'sequential') {
-          // 順序輪班：保證週末及紅日放假機制，平日規律輪班
-          if (isSun || isPublicHoliday || d % 7 === 0) {
-             row.push('O'); consecutiveDays[staff.id] = 0;
-          } else {
-             const shift = shiftTypes[(sIdx + d) % shiftTypes.length];
-             row.push(shift); consecutiveDays[staff.id]++;
-          }
+          if (isSun || isPublicHoliday || d % 7 === 0) { shiftValue = 'O'; consecutiveDays[staff.id] = 0; }
+          else { shiftValue = shiftTypes[(sIdx + d) % shiftTypes.length]; consecutiveDays[staff.id]++; }
         } else if (algoType === 'constrained') {
-          // 限制輪班：嚴格規避連續 6 天上班，並隨機分配
-          if (consecutiveDays[staff.id] >= 6) {
-            row.push('O'); consecutiveDays[staff.id] = 0;
-          } else {
+          if (consecutiveDays[staff.id] >= 6) { shiftValue = 'O'; consecutiveDays[staff.id] = 0; }
+          else {
             const isOff = Math.random() < 0.15;
-            if(isOff || isSun || isPublicHoliday) { row.push('O'); consecutiveDays[staff.id] = 0; }
-            else { row.push(shiftTypes[Math.floor(Math.random() * 3)]); consecutiveDays[staff.id]++; }
+            if(isOff || isSun || isPublicHoliday) { shiftValue = 'O'; consecutiveDays[staff.id] = 0; }
+            else { shiftValue = shiftTypes[Math.floor(Math.random() * 3)]; consecutiveDays[staff.id]++; }
           }
         }
+        
+        let fontColor = "000000";
+        if (shiftValue === 'O') fontColor = "EF4444";
+        else if (shiftValue === 'M') fontColor = "3B82F6";
+        else if (shiftValue === 'F') fontColor = "10B981";
+        
+        row.push({ v: shiftValue, s: { border: borderThin, font: { color: { rgb: fontColor }, bold: shiftValue !== 'L' } } });
       }
       data.push(row);
     });
@@ -391,6 +467,7 @@ function AdvancedGenerator({ onBack }: { onBack: () => void }) {
     const data = runSmartAlgorithm();
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch: 15}, ...Array.from({length: 31}, () => ({wch: 5}))];
     XLSX.utils.book_append_sheet(wb, ws, `SmartRoster_${year}_${month}`);
     XLSX.writeFile(wb, `${companyName}_SmartRoster_${year}_${month}.xlsx`);
   };
@@ -418,7 +495,7 @@ function AdvancedGenerator({ onBack }: { onBack: () => void }) {
                 <div className="w-1/2">
                   <label className="block text-sm text-slate-600 mb-1">年份</label>
                   <select value={year} onChange={handleYearChange} className="w-full border p-2.5 rounded-lg text-slate-900 font-medium bg-white outline-none focus:ring-2">
-                    <option value={2025}>2025</option><option value={2026}>2026</option><option value={2027}>2027</option><option value={2028}>2028</option>
+                    <option value={2026}>2026</option><option value={2027}>2027</option><option value={2028}>2028</option>
                   </select>
                 </div>
                 <div className="w-1/2">
@@ -494,7 +571,9 @@ function AdvancedGenerator({ onBack }: { onBack: () => void }) {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
                       {previewData[0]?.map((head, i) => (
-                        <th key={i} className={`p-2 border-r border-slate-200 text-slate-600 font-semibold whitespace-nowrap ${i===0 ? 'sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]':''}`}>{head}</th>
+                        <th key={i} className={`p-2 border-r border-slate-200 text-slate-600 font-semibold whitespace-nowrap ${i===0 ? 'sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]':''}`}>
+                          {head && typeof head === 'object' ? head.v : head}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -502,12 +581,13 @@ function AdvancedGenerator({ onBack }: { onBack: () => void }) {
                     {previewData.slice(1).map((row, i) => (
                       <tr key={i} className="border-b border-slate-100 hover:bg-slate-50/80">
                         {row.map((cell, j) => {
+                          const cellValue = cell && typeof cell === 'object' ? cell.v : cell;
                           let color = "text-slate-800";
-                          if (cell === 'O') color = "text-rose-500 font-bold bg-rose-50/50";
-                          else if (cell === 'M') color = "text-blue-500 font-medium";
-                          else if (cell === 'L') color = "text-amber-500 font-medium";
-                          else if (cell === 'F') color = "text-emerald-600 font-bold";
-                          return <td key={j} className={`p-2.5 border-r border-slate-100 ${color} ${j===0 ? 'sticky left-0 bg-white font-semibold text-left z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]' : ''}`}>{cell}</td>
+                          if (cellValue === 'O') color = "text-rose-500 font-bold bg-rose-50/50";
+                          else if (cellValue === 'M') color = "text-blue-500 font-medium";
+                          else if (cellValue === 'L') color = "text-amber-500 font-medium";
+                          else if (cellValue === 'F') color = "text-emerald-600 font-bold";
+                          return <td key={j} className={`p-2.5 border-r border-slate-100 ${color} ${j===0 ? 'sticky left-0 bg-white font-semibold text-left z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]' : ''}`}>{cellValue}</td>
                         })}
                       </tr>
                     ))}
