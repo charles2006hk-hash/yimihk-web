@@ -165,6 +165,12 @@ function CrownMotorGenerator({ onBack }: { onBack: () => void }) {
     return masterData;
   };
 
+  const handlePreview = () => {
+    setPreviewData(generateMasterData());
+    setShowPreview(true);
+  };
+
+  
   const handleDownloadExcel = () => {
     const wb = XLSX.utils.book_new();
     const settingsData = [["Company", companyName, "Year", year], [], ["ID", "Staff Name", "Q2 抽籤", "Q3 抽籤", "Q4 抽籤"], ...staffList.map(s => [s.id, s.name, s.q2, s.q3, s.q4])];
