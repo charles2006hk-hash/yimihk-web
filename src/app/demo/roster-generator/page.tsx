@@ -29,7 +29,6 @@ interface HistoryRecord {
   timestamp: number;
 }
 
-// 獲取指定年份的預設香港假期
 const getHKHolidaysForYear = (year: number): Holiday[] => {
   const fixedHolidays = [
     { dateKey: "1-JAN", name: "New Year Day" },
@@ -42,11 +41,10 @@ const getHKHolidaysForYear = (year: number): Holiday[] => {
 
   let variableHolidays: { dateKey: string; name: string }[] = [];
 
-  // 內建 2025-2027 香港特定浮動假期 (農曆、復活節、清明、佛誕、端午、中秋、重陽)
   if (year === 2026) {
     variableHolidays = [
       { dateKey: "17-FEB", name: "農曆年初一" }, { dateKey: "18-FEB", name: "農曆年初二" }, { dateKey: "19-FEB", name: "農曆年初三" },
-      { dateKey: "3-APR", name: "Good Friday" }, { dateKey: "4-APR", name: "Holy Saturday" }, { dateKey: "5-APR", name: "Easter Sun / Ching Ming" },
+      { dateKey: "3-APR", name: "Good Friday" }, { dateKey: "4-APR", name: "Holy Saturday" }, { dateKey: "5-APR", name: "Easter Sun" },
       { dateKey: "6-APR", name: "Easter Monday" }, { dateKey: "7-APR", name: "Day following Ching Ming" },
       { dateKey: "25-MAY", name: "Buddha Bday" }, { dateKey: "19-JUN", name: "Tuen Ng Festival" },
       { dateKey: "26-SEP", name: "Mid-Autumn Day" }, { dateKey: "19-OCT", name: "Chung Yeung Festival" }
@@ -67,9 +65,8 @@ const getHKHolidaysForYear = (year: number): Holiday[] => {
     ];
   }
 
-  // 合併並轉換成帶 ID 的格式
   return [...fixedHolidays, ...variableHolidays].map((h, i) => ({
-    id: `hol-${Date.now()}-${i}`,
+    id: `hol-${year}-${i}`,
     dateKey: h.dateKey,
     name: h.name
   }));
@@ -88,68 +85,25 @@ export default function RosterGenerator() {
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [newRecordName, setNewRecordName] = useState('');
 
-  // 初始化 & 讀取本地歷史記錄
+  // 初始化
   useEffect(() => {
     initDefaultStaff(10);
     setHolidayList(getHKHolidaysForYear(2026));
     
     const savedHistory = localStorage.getItem('rosterHistory');
     if (savedHistory) {
-      try {
-        setHistory(JSON.parse(savedHistory));
-      } catch (e) {
-        console.error("載入歷史記錄失敗");
-      }
+      try { setHistory(JSON.parse(savedHistory)); } 
+      catch (e) { console.error("載入歷史記錄失敗"); }
     }
   }, []);
 
   const initDefaultStaff = (count: number) => {
     setStaffList(Array.from({ length: count }, (_, i) => ({
-      id: i + 1,
-      name: `Staff ${String.fromCharCode(65 + i)}`,
-      q2: 1, q3: 1, q4: 1,
+      id: i + 1, name: `Staff ${String.fromCharCode(65 + i)}`, q2: 1, q3: 1, q4: 1,
     })));
   };
 
-  // --- 歷史記錄功能 ---
-  const handleSaveRecord = () => {
-    if (!newRecordName.trim()) return alert("請輸入記錄名稱！");
-    const newRecord: HistoryRecord = {
-      id: Date.now().toString(),
-      recordName: newRecordName,
-      companyName,
-      year,
-      staffCount,
-      staffList: [...staffList],
-      holidayList: [...holidayList],
-      timestamp: Date.now(),
-    };
-    const updatedHistory = [newRecord, ...history];
-    setHistory(updatedHistory);
-    localStorage.setItem('rosterHistory', JSON.stringify(updatedHistory));
-    setNewRecordName('');
-    alert("已成功儲存記錄！");
-  };
-
-  const handleLoadRecord = (record: HistoryRecord) => {
-    setCompanyName(record.companyName);
-    setYear(record.year);
-    setStaffCount(record.staffCount);
-    setStaffList([...record.staffList]);
-    setHolidayList([...(record.holidayList || getHKHolidaysForYear(record.year))]); // 兼容舊記錄
-    setShowPreview(false);
-  };
-
-  const handleDeleteRecord = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm("確定要刪除這筆記錄嗎？")) {
-      const updatedHistory = history.filter(r => r.id !== id);
-      setHistory(updatedHistory);
-      localStorage.setItem('rosterHistory', JSON.stringify(updatedHistory));
-    }
-  };
-
-  // --- 表單與假期處理 ---
+  // --- 表單處理 ---
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newYear = parseInt(e.target.value) || new Date().getFullYear();
     setYear(newYear);
@@ -167,22 +121,59 @@ export default function RosterGenerator() {
     setShowPreview(false);
   };
 
+  const handleStaffNameChange = (index: number, newName: string) => {
+    const updated = [...staffList];
+    updated[index].name = newName;
+    setStaffList(updated);
+    setShowPreview(false);
+  };
+
+  // --- 假期處理 ---
   const handleHolidayChange = (id: string, field: 'dateKey' | 'name', value: string) => {
     setHolidayList(holidayList.map(h => h.id === id ? { ...h, [field]: value } : h));
     setShowPreview(false);
   };
 
   const handleAddHoliday = () => {
-    setHolidayList([...holidayList, { id: `hol-${Date.now()}`, dateKey: `1-JAN`, name: '自訂假期' }]);
+    setHolidayList([...holidayList, { id: `hol-custom-${Date.now()}`, dateKey: `1-JAN`, name: '新假期' }]);
     setShowPreview(false);
   };
 
-  // --- 預覽與匯出邏輯 ---
+  // --- 歷史記錄 ---
+  const handleSaveRecord = () => {
+    if (!newRecordName.trim()) return alert("請輸入記錄名稱！");
+    const newRecord: HistoryRecord = {
+      id: Date.now().toString(), recordName: newRecordName, companyName, year,
+      staffCount, staffList: [...staffList], holidayList: [...holidayList], timestamp: Date.now(),
+    };
+    const updatedHistory = [newRecord, ...history];
+    setHistory(updatedHistory);
+    localStorage.setItem('rosterHistory', JSON.stringify(updatedHistory));
+    setNewRecordName('');
+    alert("已成功儲存記錄！");
+  };
+
+  const handleLoadRecord = (record: HistoryRecord) => {
+    setCompanyName(record.companyName); setYear(record.year); setStaffCount(record.staffCount);
+    setStaffList([...record.staffList]);
+    setHolidayList([...(record.holidayList || getHKHolidaysForYear(record.year))]);
+    setShowPreview(false);
+  };
+
+  const handleDeleteRecord = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("確定要刪除這筆記錄嗎？")) {
+      const updatedHistory = history.filter(r => r.id !== id);
+      setHistory(updatedHistory);
+      localStorage.setItem('rosterHistory', JSON.stringify(updatedHistory));
+    }
+  };
+
+  // --- 預覽與匯出 ---
   const generateMasterData = () => {
     const masterData: any[][] = [];
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     
-    // 建立假期的 Lookup Table
     const holidayMap: Record<string, string> = {};
     holidayList.forEach(h => { holidayMap[h.dateKey.toUpperCase()] = h.name; });
 
@@ -250,7 +241,6 @@ export default function RosterGenerator() {
     <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
         
-        {/* 左側：設定與操作區 */}
         <div className="w-full lg:w-2/3 flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
@@ -260,7 +250,6 @@ export default function RosterGenerator() {
             </div>
           </div>
 
-          {/* 基本資料 */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
             <h2 className="text-lg font-semibold mb-5 flex items-center gap-2 text-slate-800">
               <Building2 size={20} className="text-slate-500" /> 基本資料
@@ -284,7 +273,22 @@ export default function RosterGenerator() {
             </div>
           </div>
 
-          {/* 假期設定 */}
+          {/* 補回：員工名單配置 */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <h2 className="text-lg font-semibold mb-5 flex items-center gap-2 text-slate-800">
+              <Users size={20} className="text-slate-500" /> 員工名單配置
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {staffList.map((staff, index) => (
+                <div key={index} className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                  <span className="text-slate-400 text-sm font-medium w-5 text-right">{index + 1}.</span>
+                  <input type="text" value={staff.name} onChange={e => handleStaffNameChange(index, e.target.value)}
+                         className="w-full bg-transparent font-medium text-slate-700 focus:outline-none focus:text-indigo-600" />
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
@@ -309,20 +313,90 @@ export default function RosterGenerator() {
             </div>
           </div>
 
-          {/* 操作按鈕 & 預覽... (保留與上一個版本相同的 UI) */}
           <div className="flex flex-wrap gap-4 items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
             <button onClick={handlePreview} className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-6 rounded-xl transition-all">
               <Eye size={20} /> 預覽報表
             </button>
             <button onClick={handleDownloadExcel} className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-xl shadow-md transition-transform hover:scale-[1.02]">
-              <Download size={20} /> 直接匯出 Excel
+              <Download size={20} /> 匯出 Excel
             </button>
           </div>
-          {/* ... (預覽區塊) ... */}
+
+          {/* 補回：預覽區塊 */}
+          {showPreview && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
+              <h2 className="text-lg font-bold mb-4 text-slate-800 border-b pb-3">排班表預覽 ({year}年)</h2>
+              <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-slate-200">
+                <table className="min-w-full text-sm border-collapse">
+                  <tbody>
+                    {previewData.map((row, rowIndex) => (
+                      <tr key={rowIndex} className="border-b border-slate-100 hover:bg-slate-50/50">
+                        {row.map((cell, cellIndex) => {
+                          let bg = "bg-white";
+                          let textStyle = "text-slate-600";
+                          if (row[1] === "Sun") { bg = "bg-rose-50"; textStyle = "text-rose-700"; }
+                          else if (row[2] && row[0]?.includes("-")) { bg = "bg-amber-50"; textStyle = "text-amber-700"; }
+                          const isHeader = cell?.toString().includes("DUTY ROSTER");
+                          
+                          return (
+                            <td key={cellIndex} className={`p-2.5 border-r border-slate-100 whitespace-nowrap ${bg} ${textStyle} ${isHeader ? 'font-bold text-lg text-slate-800 bg-slate-50' : ''}`}>
+                              {cell}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* 右側：歷史記錄 (保留與上一個版本相同的 UI) */}
-        {/* ... */}
+        {/* 右側：歷史記錄 */}
+        <div className="w-full lg:w-1/3 flex flex-col gap-6">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 sticky top-6">
+            <h2 className="text-lg font-semibold mb-5 flex items-center gap-2 text-slate-800">
+              <Clock size={20} className="text-slate-500" /> 歷史記錄
+            </h2>
+            
+            <div className="flex gap-2 mb-6 pb-6 border-b border-slate-100">
+              <input type="text" placeholder="為當前設定命名..." value={newRecordName} onChange={e => setNewRecordName(e.target.value)}
+                className="flex-1 border border-slate-200 p-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" />
+              <button onClick={handleSaveRecord} className="bg-emerald-500 hover:bg-emerald-600 text-white p-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-1 text-sm font-medium">
+                <Save size={18} /> 儲存
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+              {history.length === 0 ? (
+                <p className="text-center text-slate-400 text-sm py-8">暫無儲存的記錄</p>
+              ) : (
+                history.map((record) => (
+                  <div key={record.id} onClick={() => handleLoadRecord(record)} className="group flex flex-col bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 rounded-xl p-3.5 cursor-pointer transition-all">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-semibold text-slate-700 group-hover:text-indigo-700 flex items-center gap-1.5">
+                        <UploadCloud size={16} className="text-indigo-400" />
+                        {record.recordName}
+                      </h3>
+                      <button onClick={(e) => handleDeleteRecord(record.id, e)} className="text-slate-300 hover:text-red-500 transition-colors p-1" title="刪除記錄">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-slate-500">
+                      <span>{record.companyName} ({record.year})</span>
+                      <span>{record.staffCount} 人</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-2">
+                      {new Date(record.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
